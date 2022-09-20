@@ -4,6 +4,8 @@ project (Sig18)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 # set(CMAKE_C_COMPILER /usr/local/bin/gcc)
 # set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall")
@@ -24,6 +26,8 @@ endif()
 
 add_executable(Driver main.cpp)
 target_link_libraries(Driver database)
+target_link_libraries(Driver PRIVATE Threads::Threads)
+
 
 # Interactive command line tool to translate our query format to SQL queries
 add_executable(Query2SQL Query2SQL.cpp)

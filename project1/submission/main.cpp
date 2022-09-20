@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Joiner.hpp"
 #include "Parser.hpp"
-#include "pthread.h"
+#include <pthread.h>
 
 using namespace std;
 
