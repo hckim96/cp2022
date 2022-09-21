@@ -1,6 +1,7 @@
 #include <Operators.hpp>
 #include <cassert>
 #include <iostream>
+#include "ThreadPool.h"
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
@@ -68,16 +69,40 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
   return false;
 }
 //---------------------------------------------------------------------------
+extern uint64_t fsNumThread;
+extern ThreadPool pool;
 void FilterScan::run()
   // Run
 {
-  for (uint64_t i=0;i<relation.size;++i) {
-    bool pass=true;
-    for (auto& f : filters) {
-      pass&=applyFilter(i,f);
-    }
-    if (pass)
+  vector<future<vector<uint64_t> > > results;
+
+  uint64_t workCnt = relation.size / fsNumThread;
+
+  for (uint64_t tid = 0; tid < fsNumThread; ++tid) {
+    uint64_t start = tid * workCnt;
+    uint64_t end = start + workCnt;
+    if (tid == fsNumThread - 1) end = relation.size;
+
+    results.emplace_back(
+      pool.enqueue([this, start, end] {
+        vector<uint64_t> res;
+        for (uint64_t i = start; i < end; ++i) {
+          bool pass = true;
+          for (auto&f : filters) {
+            pass&=applyFilter(i, f);
+          }
+          if (pass)
+            res.push_back(i);
+        }
+        return res;
+      })
+    );
+  }
+
+  for (auto && result: results) {
+    for (auto i: result.get()) {
       copy2Result(i);
+    }
   }
 }
 //---------------------------------------------------------------------------

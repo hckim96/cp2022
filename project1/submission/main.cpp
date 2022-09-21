@@ -2,15 +2,19 @@
 #include "Joiner.hpp"
 #include "Parser.hpp"
 #include <pthread.h>
-
+#include "ThreadPool.h"
 using namespace std;
 
-#define NUM_THREADS 100
+// query in  one batch max: 30 ~ 40
+#define NUM_THREADS 40
 
 vector<Joiner> joiners(NUM_THREADS);
 vector<QueryInfo> queryInfos(NUM_THREADS);
 pthread_t threads[NUM_THREADS];
 vector<string> results(NUM_THREADS);
+
+uint64_t fsNumThread = 40;
+ThreadPool pool(fsNumThread);
 
 void* thread_func(void* arg) {
    int idx = *(int*)arg;
