@@ -10,10 +10,10 @@ else
     echo "Parameter passed commit msg = $1"
 fi
 
-echo -e "\n============================run package.sh============================\n"
+echo -e "============================run package.sh============================"
 ./package.sh
 
-echo -e "\n============================cp package to hconnect============================\n"
+echo -e "============================cp package to hconnect============================"
 cp "$localRepo/submission.tar.gz" "$hconnectRepo/submission.tar.gz"
 
 echo -e "\n============================local push============================\n"
