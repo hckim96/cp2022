@@ -12,26 +12,18 @@ fi
 commitMsg=$1
 
 # package
+
+echo -e "\n============================run package.sh============================\n"
 ./package.sh
 
-# cp package to hconnect
 echo -e "\n============================local push============================\n"
-# cp "$localRepo/submission.tar.gz" "$hconnectRepo/submission.tar.gz"
-
+cd $localRepo
 ${GIT} add .
 ${GIT} commit -m "$1"
 ${GIT} push
 
-# 
-echo "hconnect push"
-# cd $localRepo
-# ${GIT} add .
-
-# ${GIT} add "myPackage.sh"
-
-# cd $hconnectRepo
-# ${GIT} add "$hconnectRepo/submission.tar.gz"
-# ${GIT} commit -m "$1"
-# ${GIT} push
-
-# ./package.sh
+echo -e "\n============================hconnect push============================\n"
+cd $hconnectRepo
+${GIT} add "$hconnectRepo/submission.tar.gz"
+${GIT} commit -m "$1"
+${GIT} push
