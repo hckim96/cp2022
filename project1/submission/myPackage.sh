@@ -15,6 +15,7 @@ commitMsg=$1
 ./package.sh
 
 # cp package to hconnect
+echo "local push"
 # cp "$localRepo/submission.tar.gz" "$hconnectRepo/submission.tar.gz"
 
 ${GIT} add .
@@ -22,6 +23,7 @@ ${GIT} commit -m "$1"
 ${GIT} push
 
 # 
+echo "hconnect push"
 # cd $localRepo
 # ${GIT} add .
 
