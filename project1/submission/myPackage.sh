@@ -7,14 +7,14 @@ if [ -z $1 ]
 then
     echo "No parameter passed"
 else
-    echo "Parameter passed = $1"
+    echo "Parameter passed commit msg = $1"
 fi
-commitMsg=$1
-
-# package
 
 echo -e "\n============================run package.sh============================\n"
 ./package.sh
+
+echo -e "\n============================cp package to hconnect============================\n"
+cp "$localRepo/submission.tar.gz" "$hconnectRepo/submission.tar.gz"
 
 echo -e "\n============================local push============================\n"
 cd $localRepo
