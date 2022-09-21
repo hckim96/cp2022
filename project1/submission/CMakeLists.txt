@@ -8,7 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Threads REQUIRED)
 # set(CMAKE_C_COMPILER /usr/local/bin/gcc)
 # set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall")
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=address")
 
 include_directories(include)
 
@@ -20,9 +21,9 @@ target_include_directories(database PUBLIC
     PRIVATE src)
 
 OPTION(FORCE_TESTS "Build tests, regardless of build type." ON)
-if (CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" OR FORCE_TESTS)
-    add_subdirectory(test)
-endif()
+# if (CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" OR FORCE_TESTS)
+#     add_subdirectory(test)
+# endif()
 
 add_executable(Driver main.cpp)
 target_link_libraries(Driver database Threads::Threads)
