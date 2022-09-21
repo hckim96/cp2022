@@ -2,6 +2,8 @@
 #include <cassert>
 #include <iostream>
 #include "ThreadPool.h"
+#include <map>
+
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
@@ -70,7 +72,7 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
 }
 //---------------------------------------------------------------------------
 extern uint64_t fsNumThread;
-extern ThreadPool pool;
+extern ThreadPool fspool;
 void FilterScan::run()
   // Run
 {
@@ -84,7 +86,7 @@ void FilterScan::run()
     if (tid == fsNumThread - 1) end = relation.size;
 
     results.emplace_back(
-      pool.enqueue([this, start, end] {
+      fspool.enqueue([this, start, end] {
         vector<uint64_t> res;
         for (uint64_t i = start; i < end; ++i) {
           bool pass = true;
@@ -254,13 +256,21 @@ void Checksum::run()
   input->run();
   auto results=input->getResults();
 
+  map<SelectInfo, uint64_t> mm;
+
   for (auto& sInfo : colInfo) {
+    if (mm.count(sInfo)) {
+      checkSums.push_back(mm[sInfo]);
+      continue;
+    }
     auto colId=input->resolve(sInfo);
     auto resultCol=results[colId];
     uint64_t sum=0;
     resultSize=input->resultSize;
     for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
       sum+=*iter;
+    
+    mm[sInfo] = sum;
     checkSums.push_back(sum);
   }
 }
