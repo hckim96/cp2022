@@ -115,44 +115,44 @@ void QueryInfo::resolveRelationIds()
   }
 }
 //---------------------------------------------------------------------------
-void QueryInfo::sameSelect() {
-  vector<set<SelectInfo> > same;
+// void QueryInfo::sameSelect() {
+//   vector<set<SelectInfo> > same;
 
-  for (auto& pInfo: predicates) {
-    bool found = false;
-    for (auto s: same) {
-      if (s.count(pInfo.left)) {
-        found = true;
-        s.insert(pInfo.right);
-        break;
-      } else if (s.count(pInfo.right)) {
-        found = true;
-        s.insert(pInfo.right);
-        break;
-      }
-    }
-    if (!found) {
-      same.push_back({pInfo.left, pInfo.right});
-    }
-  }
+//   for (auto& pInfo: predicates) {
+//     bool found = false;
+//     for (auto s: same) {
+//       if (s.count(pInfo.left)) {
+//         found = true;
+//         s.insert(pInfo.right);
+//         break;
+//       } else if (s.count(pInfo.right)) {
+//         found = true;
+//         s.insert(pInfo.right);
+//         break;
+//       }
+//     }
+//     if (!found) {
+//       same.push_back({pInfo.left, pInfo.right});
+//     }
+//   }
 
 
-  for (int i = 0; i < selections.size(); ++i) {
-    for (int j = 0; j < i; ++j) {
-      bool isSameSum = false;
-      for (auto s: same) {
-        if (s.count(selections[i]) && s.count(selections[j])) {
-          isSameSum = true;
-          break;
-        }
-      }
-      if (isSameSum) {
-        selections[i] = selections[j];
-        break;
-      }
-    }
-  }
-}
+//   for (int i = 0; i < selections.size(); ++i) {
+//     for (int j = 0; j < i; ++j) {
+//       bool isSameSum = false;
+//       for (auto s: same) {
+//         if (s.count(selections[i]) && s.count(selections[j])) {
+//           isSameSum = true;
+//           break;
+//         }
+//       }
+//       if (isSameSum) {
+//         selections[i] = selections[j];
+//         break;
+//       }
+//     }
+//   }
+// }
 
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
@@ -164,7 +164,7 @@ void QueryInfo::parseQuery(string& rawQuery)
   parseRelationIds(queryParts[0]);
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
-  sameSelect();
+  // sameSelect();
   resolveRelationIds();
 }
 //---------------------------------------------------------------------------
