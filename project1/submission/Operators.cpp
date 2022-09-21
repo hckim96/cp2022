@@ -1,6 +1,7 @@
 #include <Operators.hpp>
 #include <cassert>
 #include <iostream>
+#include <map>
 #include "ThreadPool.h"
 //---------------------------------------------------------------------------
 using namespace std;
@@ -254,57 +255,22 @@ void Checksum::run()
   input->run();
   auto results=input->getResults();
 
-  vector<future<uint64_t> > sums;
-  int idx = 0;
+  map<SelectInfo, uint64_t> mm;
+
   for (auto& sInfo : colInfo) {
-    sums.emplace_back(
-      pool.enqueue([&]{
-        auto colId=input->resolve(sInfo);
-        auto resultCol=results[colId];
-        resultSize = input->resultSize;
-        uint64_t sum=0;
-        vector<future<uint64_t> > ssums;
-        int iidx = 0;
-
-        uint64_t iidxEnd = 7;
-        for (uint64_t iidx = 0; iidx < iidxEnd; ++iidx) {
-          uint64_t div = input->resultSize / iidxEnd;
-          ssums.emplace_back(
-            pool.enqueue([=]{
-              uint64_t ssum = 0;
-              auto s = resultCol;
-              s += iidx * div;
-              auto e = s + div;
-              if (iidx == iidxEnd - 1) e = resultCol + input -> resultSize;
-              for (auto iter = s; iter != e; ++iter) {
-                ssum += *iter;
-              }
-              return ssum;
-            })
-          );
-        }
-        for (auto&& e: ssums) {
-          sum += e.get();
-        }
-        // resultSize=input->resultSize;
-        // for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
-        //   sum+=*iter;
-        // checkSums.push_back(sum);
-        return sum;
-      })
-    );
-    ++idx;
-    // auto colId=input->resolve(sInfo);
-    // auto resultCol=results[colId];
-    // uint64_t sum=0;
-    // resultSize=input->resultSize;
-
-    // for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
-    //   sum+=*iter;
-    // checkSums.push_back(sum);
-  }
-  for (auto && sum: sums) {
-    checkSums.push_back(sum.get());
+    if (mm.count(sInfo)) {
+      checkSums.push_back(mm[sInfo]);
+      continue;
+    }
+    auto colId=input->resolve(sInfo);
+    auto resultCol=results[colId];
+    uint64_t sum=0;
+    resultSize=input->resultSize;
+    for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
+      sum+=*iter;
+    
+    mm[sInfo] = sum;
+    checkSums.push_back(sum);
   }
 }
 //---------------------------------------------------------------------------

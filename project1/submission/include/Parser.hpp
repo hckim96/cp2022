@@ -106,6 +106,8 @@ class QueryInfo {
    void parseSelections(std::string& rawSelections);
    /// Parse selections [RELATIONS]|[PREDICATES]|[SELECTS]
    void parseQuery(std::string& rawQuery);
+   
+   void sameSelect();
    /// Dump text format
    std::string dumpText();
    /// Dump SQL
