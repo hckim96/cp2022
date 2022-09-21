@@ -9,7 +9,7 @@ using namespace std;
 uint64_t mNumThread = 40;
 ThreadPool mpool(mNumThread);
 
-uint64_t fsNumThread = 30;
+uint64_t fsNumThread = 40;
 ThreadPool fspool(fsNumThread);
 
 //---------------------------------------------------------------------------
@@ -25,8 +25,8 @@ int main(int argc, char* argv[]) {
    }
    // Preparation phase (not timed)
    // Build histograms, indexes,...
-   vector<Joiner> joiners(fsNumThread);
-   for (int i = 0; i < fsNumThread; ++i) {
+   vector<Joiner> joiners(mNumThread);
+   for (int i = 0; i < mNumThread; ++i) {
       joiners[i] = joiner;
    }
 
