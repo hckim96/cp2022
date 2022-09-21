@@ -9,8 +9,8 @@ using namespace std;
 uint64_t mNumThread = 100;
 ThreadPool mpool(mNumThread);
 
-uint64_t fsNumThread = 100;
-ThreadPool fspool(fsNumThread);
+// uint64_t fsNumThread = 100;
+// ThreadPool fspool(fsNumThread);
 
 //---------------------------------------------------------------------------
 

@@ -71,22 +71,24 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
   return false;
 }
 //---------------------------------------------------------------------------
-extern uint64_t fsNumThread;
-extern ThreadPool fspool;
+// extern uint64_t fsNumThread;
+// extern ThreadPool fspool;
+extern uint64_t mNumThread;
+extern ThreadPool mpool;
 void FilterScan::run()
   // Run
 {
   vector<future<vector<uint64_t> > > results;
 
-  uint64_t workCnt = relation.size / fsNumThread;
+  uint64_t workCnt = relation.size / mNumThread;
 
-  for (uint64_t tid = 0; tid < fsNumThread; ++tid) {
+  for (uint64_t tid = 0; tid < mNumThread; ++tid) {
     uint64_t start = tid * workCnt;
     uint64_t end = start + workCnt;
-    if (tid == fsNumThread - 1) end = relation.size;
+    if (tid == mNumThread - 1) end = relation.size;
 
     results.emplace_back(
-      fspool.enqueue([this, start, end] {
+      mpool.enqueue([this, start, end] {
         vector<uint64_t> res;
         for (uint64_t i = start; i < end; ++i) {
           bool pass = true;
