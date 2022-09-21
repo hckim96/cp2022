@@ -6,10 +6,10 @@
 using namespace std;
 
 // query in  one batch max: 30 ~ 40
-uint64_t mNumThread = 40;
+uint64_t mNumThread = 100;
 ThreadPool mpool(mNumThread);
 
-uint64_t fsNumThread = 40;
+uint64_t fsNumThread = 100;
 ThreadPool fspool(fsNumThread);
 
 //---------------------------------------------------------------------------
