@@ -3,6 +3,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <set>
+
 #include "Relation.hpp"
 //---------------------------------------------------------------------------
 struct SelectInfo {
@@ -88,6 +90,8 @@ class QueryInfo {
    std::vector<FilterInfo> filters;
    /// The selections
    std::vector<SelectInfo> selections;
+
+   std::vector<std::set<SelectInfo> > same;
    /// Reset query info
    void clear();
 
@@ -106,8 +110,10 @@ class QueryInfo {
    void parseSelections(std::string& rawSelections);
    /// Parse selections [RELATIONS]|[PREDICATES]|[SELECTS]
    void parseQuery(std::string& rawQuery);
-   
+
    void sameSelect();
+
+   void addMoreFilterWithPredicates();
    /// Dump text format
    std::string dumpText();
    /// Dump SQL

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <utility>
 #include <sstream>
-#include <set>
 #include "Parser.hpp"
 //---------------------------------------------------------------------------
 using namespace std;
@@ -116,7 +115,6 @@ void QueryInfo::resolveRelationIds()
 }
 //---------------------------------------------------------------------------
 void QueryInfo::sameSelect() {
-  vector<set<SelectInfo> > same;
   for (auto& pInfo: predicates) {
     bool found = false;
     for (auto s: same) {
@@ -150,6 +148,25 @@ void QueryInfo::sameSelect() {
     }
   }
 }
+
+void QueryInfo::addMoreFilterWithPredicates() {
+
+  int prevSize = filters.size();
+  for (int i = 0; i < prevSize; ++i) {
+    auto& fInfo = filters[i];
+    for (auto s: same) {
+      auto it = s.find(fInfo.filterColumn);
+      if (it != s.end()) {
+        for (auto col: s) {
+          if (col == *it) continue;
+          filters.emplace_back(col, fInfo.constant, fInfo.comparison);
+        }
+        break;
+      }
+    }
+  }
+}
+
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
 {
@@ -161,6 +178,7 @@ void QueryInfo::parseQuery(string& rawQuery)
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
   sameSelect();
+  addMoreFilterWithPredicates();
   resolveRelationIds();
 }
 //---------------------------------------------------------------------------
