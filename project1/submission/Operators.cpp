@@ -74,7 +74,7 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
 extern uint64_t fsNumThread;
 extern ThreadPool fspool;
 void FilterScan::run()
-  // Run/
+  // Run
 {
   vector<future<vector<uint64_t> > > results;
 
