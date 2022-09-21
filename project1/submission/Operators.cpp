@@ -2,8 +2,6 @@
 #include <cassert>
 #include <iostream>
 #include "ThreadPool.h"
-#include <map>
-
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
@@ -71,24 +69,22 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
   return false;
 }
 //---------------------------------------------------------------------------
-// extern uint64_t fsNumThread;
-// extern ThreadPool fspool;
-extern uint64_t mNumThread;
-extern ThreadPool mpool;
+extern uint64_t fsNumThread;
+extern ThreadPool pool;
 void FilterScan::run()
   // Run
 {
   vector<future<vector<uint64_t> > > results;
 
-  uint64_t workCnt = relation.size / mNumThread;
+  uint64_t workCnt = relation.size / fsNumThread;
 
-  for (uint64_t tid = 0; tid < mNumThread; ++tid) {
+  for (uint64_t tid = 0; tid < fsNumThread; ++tid) {
     uint64_t start = tid * workCnt;
     uint64_t end = start + workCnt;
-    if (tid == mNumThread - 1) end = relation.size;
+    if (tid == fsNumThread - 1) end = relation.size;
 
     results.emplace_back(
-      mpool.enqueue([this, start, end] {
+      pool.enqueue([this, start, end] {
         vector<uint64_t> res;
         for (uint64_t i = start; i < end; ++i) {
           bool pass = true;
@@ -258,22 +254,57 @@ void Checksum::run()
   input->run();
   auto results=input->getResults();
 
-  map<SelectInfo, uint64_t> mm;
-
+  vector<future<uint64_t> > sums;
+  int idx = 0;
   for (auto& sInfo : colInfo) {
-    if (mm.count(sInfo)) {
-      checkSums.push_back(mm[sInfo]);
-      continue;
-    }
-    auto colId=input->resolve(sInfo);
-    auto resultCol=results[colId];
-    uint64_t sum=0;
-    resultSize=input->resultSize;
-    for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
-      sum+=*iter;
-    
-    mm[sInfo] = sum;
-    checkSums.push_back(sum);
+    sums.emplace_back(
+      pool.enqueue([&]{
+        auto colId=input->resolve(sInfo);
+        auto resultCol=results[colId];
+        resultSize = input->resultSize;
+        uint64_t sum=0;
+        vector<future<uint64_t> > ssums;
+        int iidx = 0;
+
+        uint64_t iidxEnd = 7;
+        for (uint64_t iidx = 0; iidx < iidxEnd; ++iidx) {
+          uint64_t div = input->resultSize / iidxEnd;
+          ssums.emplace_back(
+            pool.enqueue([=]{
+              uint64_t ssum = 0;
+              auto s = resultCol;
+              s += iidx * div;
+              auto e = s + div;
+              if (iidx == iidxEnd - 1) e = resultCol + input -> resultSize;
+              for (auto iter = s; iter != e; ++iter) {
+                ssum += *iter;
+              }
+              return ssum;
+            })
+          );
+        }
+        for (auto&& e: ssums) {
+          sum += e.get();
+        }
+        // resultSize=input->resultSize;
+        // for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
+        //   sum+=*iter;
+        // checkSums.push_back(sum);
+        return sum;
+      })
+    );
+    ++idx;
+    // auto colId=input->resolve(sInfo);
+    // auto resultCol=results[colId];
+    // uint64_t sum=0;
+    // resultSize=input->resultSize;
+
+    // for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
+    //   sum+=*iter;
+    // checkSums.push_back(sum);
+  }
+  for (auto && sum: sums) {
+    checkSums.push_back(sum.get());
   }
 }
 //---------------------------------------------------------------------------

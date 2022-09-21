@@ -6,11 +6,8 @@
 using namespace std;
 
 // query in  one batch max: 30 ~ 40
-uint64_t mNumThread = 100;
-ThreadPool mpool(mNumThread);
-
-// uint64_t fsNumThread = 100;
-// ThreadPool fspool(fsNumThread);
+uint64_t fsNumThread = 100;
+ThreadPool pool(fsNumThread);
 
 //---------------------------------------------------------------------------
 
@@ -25,8 +22,8 @@ int main(int argc, char* argv[]) {
    }
    // Preparation phase (not timed)
    // Build histograms, indexes,...
-   vector<Joiner> joiners(mNumThread);
-   for (int i = 0; i < mNumThread; ++i) {
+   vector<Joiner> joiners(fsNumThread);
+   for (int i = 0; i < fsNumThread; ++i) {
       joiners[i] = joiner;
    }
 
@@ -47,7 +44,7 @@ int main(int argc, char* argv[]) {
       lines.push_back(line);
       string tmp = line;
       results.emplace_back(
-         mpool.enqueue([&joiners, &lines, idx] {
+         pool.enqueue([&joiners, &lines, idx] {
             QueryInfo i;
             i.parseQuery(lines[idx]);
             return joiners[idx].join(i);
