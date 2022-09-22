@@ -27,7 +27,7 @@ Relation& Joiner::getRelation(unsigned relationId)
   return relations[relationId];
 }
 //---------------------------------------------------------------------------
-shared_ptr<Operator> Joiner::addScan(set<unsigned>& usedRelations,SelectInfo& info,QueryInfo& query)
+unique_ptr<Operator> Joiner::addScan(set<unsigned>& usedRelations,SelectInfo& info,QueryInfo& query)
   // Add scan to query
 {
   usedRelations.emplace(info.binding);
@@ -37,7 +37,7 @@ shared_ptr<Operator> Joiner::addScan(set<unsigned>& usedRelations,SelectInfo& in
         filters.emplace_back(f);
       }
     }
-  return filters.size()?make_shared<FilterScan>(getRelation(info.relId),filters):make_shared<Scan>(getRelation(info.relId),info.binding);
+  return filters.size()?make_unique<FilterScan>(getRelation(info.relId),filters):make_unique<Scan>(getRelation(info.relId),info.binding);
 }
 //---------------------------------------------------------------------------
 enum QueryGraphProvides {  Left, Right, Both, None };
@@ -66,29 +66,29 @@ string Joiner::join(QueryInfo& query)
   auto& firstJoin=query.predicates[0];
   auto left=addScan(usedRelations,firstJoin.left,query);
   auto right=addScan(usedRelations,firstJoin.right,query);
-  shared_ptr<Operator> root=make_shared<Join>(left,right,firstJoin);
+  unique_ptr<Operator> root=make_unique<Join>(move(left),move(right),firstJoin);
 
 
 
   for (unsigned i=1;i<query.predicates.size();++i) {
     auto& pInfo=query.predicates[i];
     auto& leftInfo=pInfo.left; auto& rightInfo=pInfo.right;
-    shared_ptr<Operator> left, right;
+    unique_ptr<Operator> left, right;
     switch(analyzeInputOfJoin(usedRelations,leftInfo,rightInfo)) {
       case QueryGraphProvides::Left:
-        left=root;
+        left=move(root);
         right=addScan(usedRelations,rightInfo,query);
-        root=make_shared<Join>(left,right,pInfo);
+        root=make_unique<Join>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Right:
         left=addScan(usedRelations,leftInfo,query);
-        right=root;
-        root=make_shared<Join>(left,right,pInfo);
+        right=move(root);
+        root=make_unique<Join>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Both:
         // All relations of this join are already used somewhere else in the query.
         // Thus, we have either a cycle in our join graph or more than one join predicate per join.
-        root=make_shared<SelfJoin>(root,pInfo);
+        root=make_unique<SelfJoin>(move(root),pInfo);
         break;
       case QueryGraphProvides::None:
         // Process this predicate later when we can connect it to the other joins
@@ -98,7 +98,7 @@ string Joiner::join(QueryInfo& query)
     };
   }
 
-  Checksum checkSum(root,query.selections);
+  Checksum checkSum(move(root),query.selections);
   checkSum.run();
 
 
