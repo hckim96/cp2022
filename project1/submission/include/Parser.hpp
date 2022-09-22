@@ -114,6 +114,13 @@ class QueryInfo {
    void sameSelect();
 
    void addMoreFilterWithPredicates();
+   /*
+      given query 0.1 = 1.0 and 0.1 < 3000 
+      where range(1.0) is [2000, 10000] and range(0.1) is [0, 5000]
+      then filter 0.1 > 2000 and 1.0 < 5000 can be added
+   */
+   void addFilterWithPredicateAndColRange();
+
    /// Dump text format
    std::string dumpText();
    /// Dump SQL

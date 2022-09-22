@@ -167,6 +167,38 @@ void QueryInfo::addMoreFilterWithPredicates() {
   }
 }
 
+//---------------------------------------------------------------------------
+extern vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
+
+void QueryInfo::addFilterWithPredicateAndColRange() {
+  auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+    return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+  };
+
+  for (auto& pInfo: predicates) {
+    auto& left = pInfo.left;
+    auto& right = pInfo.right;
+
+    auto lRange = rangeCache[left.relId][left.colId];
+    auto rRange = rangeCache[right.relId][right.colId];
+    auto [l, r] = getIntersection(lRange, rRange);
+
+    if (l > r) {
+      // no intersection
+      filters.push_back(FilterInfo(left, lRange.second, FilterInfo::Greater));
+      filters.push_back(FilterInfo(right, rRange.second, FilterInfo::Greater));
+    } else if (l == r) {
+      filters.push_back(FilterInfo(left, l, FilterInfo::Equal));
+      filters.push_back(FilterInfo(right, l, FilterInfo::Equal));
+    } else {
+      if (lRange.first != l && l) filters.push_back(FilterInfo(left, l - 1, FilterInfo::Greater));
+      if (lRange.second != r && r) filters.push_back(FilterInfo(left, r + 1, FilterInfo::Less));
+      if (rRange.first != l && l) filters.push_back(FilterInfo(right, l - 1, FilterInfo::Greater));
+      if (rRange.second != r && r) filters.push_back(FilterInfo(right, r + 1, FilterInfo::Less));
+    }
+  }
+}
+
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
 {
@@ -180,6 +212,7 @@ void QueryInfo::parseQuery(string& rawQuery)
   sameSelect();
   addMoreFilterWithPredicates();
   resolveRelationIds();
+  addFilterWithPredicateAndColRange();
 }
 //---------------------------------------------------------------------------
 void QueryInfo::clear()

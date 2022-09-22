@@ -30,8 +30,8 @@ target_link_libraries(Driver database Threads::Threads)
 
 
 # Interactive command line tool to translate our query format to SQL queries
-add_executable(Query2SQL Query2SQL.cpp)
-target_link_libraries(Query2SQL database)
+# add_executable(Query2SQL Query2SQL.cpp)
+# target_link_libraries(Query2SQL database)
 
 # Test harness
 add_executable(harness harness.cpp)
