@@ -253,10 +253,10 @@ void Checksum::run()
   auto results=input->getResults();
 
   for (auto& sInfo : colInfo) {
-    if (checksumCache.count(sInfo)) {
-      checkSums.push_back(checksumCache[sInfo]);
-      continue;
-    }
+    // if (checksumCache.count(sInfo)) {
+    //   checkSums.push_back(checksumCache[sInfo]);
+    //   continue;
+    // }
     auto colId=input->resolve(sInfo);
     auto resultCol=results[colId];
     uint64_t sum=0;
@@ -264,7 +264,7 @@ void Checksum::run()
     for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
       sum+=*iter;
     
-    checksumCache[sInfo] = sum;
+    // checksumCache[sInfo] = sum;
     checkSums.push_back(sum);
   }
 }

@@ -9,6 +9,8 @@
 #include <set>
 #include "Relation.hpp"
 #include "Parser.hpp"
+
+#define UINT64MAX 18446744073709551615
 //---------------------------------------------------------------------------
 namespace std {
   /// Simple hash function to enable use with unordered_map
@@ -149,7 +151,7 @@ class Checksum : public Operator {
   /// The join predicate info
   std::vector<SelectInfo>& colInfo;
   /// map sinfo to it's sum
-  std::unordered_map<SelectInfo,uint64_t> checksumCache;
+  // std::unordered_map<SelectInfo,uint64_t> checksumCache;
 
 
   public:
