@@ -86,10 +86,13 @@ void FilterScan::run()
     switch (f.comparison) {
       case FilterInfo::Comparison::Equal:
         if (f.constant < colRange.first || f.constant > colRange.second) emptyResult = true;
+        break;
       case FilterInfo::Comparison::Greater:
         if (f.constant >= colRange.second) emptyResult = true;
+        break;
       case FilterInfo::Comparison::Less:
         if (f.constant <= colRange.first) emptyResult = true;
+        break;
     };
     if (emptyResult) return;
   }
