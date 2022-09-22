@@ -231,13 +231,11 @@ void Checksum::run()
   input->run();
   auto results=input->getResults();
 
-  // map<SelectInfo, uint64_t> mm;
-
   for (auto& sInfo : colInfo) {
-    // if (mm.count(sInfo)) {
-    //   checkSums.push_back(mm[sInfo]);
-    //   continue;
-    // }
+    if (checksumCache.count(sInfo)) {
+      checkSums.push_back(checksumCache[sInfo]);
+      continue;
+    }
     auto colId=input->resolve(sInfo);
     auto resultCol=results[colId];
     uint64_t sum=0;
@@ -245,7 +243,7 @@ void Checksum::run()
     for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
       sum+=*iter;
     
-    // mm[sInfo] = sum;
+    checksumCache[sInfo] = sum;
     checkSums.push_back(sum);
   }
 }

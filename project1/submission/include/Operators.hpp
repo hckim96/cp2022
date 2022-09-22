@@ -148,6 +148,9 @@ class Checksum : public Operator {
   std::unique_ptr<Operator> input;
   /// The join predicate info
   std::vector<SelectInfo>& colInfo;
+  /// map sinfo to it's sum
+  std::unordered_map<SelectInfo,uint64_t> checksumCache;
+
 
   public:
   std::vector<uint64_t> checkSums;

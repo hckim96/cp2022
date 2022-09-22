@@ -18,7 +18,7 @@ cp "$localRepo/submission.tar.gz" "$hconnectRepo/submission.tar.gz"
 
 echo -e "\n============================local push============================\n"
 cd $localRepo
-${GIT} add .
+${GIT} add ./
 ${GIT} commit -m "$1"
 ${GIT} push
 
