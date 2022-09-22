@@ -88,7 +88,7 @@ class FilterScan : public Scan {
 //---------------------------------------------------------------------------
 class Join : public Operator {
   /// The input operators
-  std::unique_ptr<Operator> left, right;
+  std::shared_ptr<Operator> left, right;
   /// The join predicate info
   PredicateInfo& pInfo;
   /// Copy tuple to result
@@ -113,7 +113,7 @@ class Join : public Operator {
 
   public:
   /// The constructor
-  Join(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo) : left(std::move(left)), right(std::move(right)), pInfo(pInfo) {};
+  Join(std::shared_ptr<Operator>& left,std::shared_ptr<Operator>& right,PredicateInfo& pInfo) : left(left), right(right), pInfo(pInfo) {};
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run
@@ -122,7 +122,7 @@ class Join : public Operator {
 //---------------------------------------------------------------------------
 class SelfJoin : public Operator {
   /// The input operators
-  std::unique_ptr<Operator> input;
+  std::shared_ptr<Operator> input;
   /// The join predicate info
   PredicateInfo& pInfo;
   /// Copy tuple to result
@@ -137,7 +137,7 @@ class SelfJoin : public Operator {
 
   public:
   /// The constructor
-  SelfJoin(std::unique_ptr<Operator>&& input,PredicateInfo& pInfo) : input(std::move(input)), pInfo(pInfo) {};
+  SelfJoin(std::shared_ptr<Operator>& input,PredicateInfo& pInfo) : input((input)), pInfo(pInfo) {};
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run
@@ -146,7 +146,7 @@ class SelfJoin : public Operator {
 //---------------------------------------------------------------------------
 class Checksum : public Operator {
   /// The input operator
-  std::unique_ptr<Operator> input;
+  std::shared_ptr<Operator> input;
   /// The join predicate info
   std::vector<SelectInfo>& colInfo;
   /// map sinfo to it's sum
@@ -156,7 +156,7 @@ class Checksum : public Operator {
   public:
   std::vector<uint64_t> checkSums;
   /// The constructor
-  Checksum(std::unique_ptr<Operator>&& input,std::vector<SelectInfo>& colInfo) : input(std::move(input)), colInfo(colInfo) {};
+  Checksum(std::shared_ptr<Operator>& input,std::vector<SelectInfo>& colInfo) : input((input)), colInfo(colInfo) {};
   /// Request a column and add it to results
   bool require(SelectInfo info) override { throw; /* check sum is always on the highest level and thus should never request anything */ }
   /// Run

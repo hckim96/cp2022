@@ -9,7 +9,7 @@
 class Joiner {
 
   /// Add scan to query
-  std::unique_ptr<Operator> addScan(std::set<unsigned>& usedRelations,SelectInfo& info,QueryInfo& query);
+  std::shared_ptr<Operator> addScan(std::set<unsigned>& usedRelations,SelectInfo& info,QueryInfo& query);
 
   public:
   /// The relations that might be joined

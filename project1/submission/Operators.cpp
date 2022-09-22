@@ -181,13 +181,23 @@ void Join::copy2Result(uint64_t leftId,uint64_t rightId)
   ++resultSize;
 }
 //---------------------------------------------------------------------------
+extern ThreadPool pool;
 void Join::run()
   // Run
 {
   left->require(pInfo.left);
   right->require(pInfo.right);
-  left->run();
-  right->run();
+  auto ret1 = pool.enqueue([left = left]{
+    left->run();
+  });
+  auto ret2 = pool.enqueue([right = right]{
+    right->run();
+    return right;
+  });
+  ret1.wait();
+  ret2.wait();
+  // // left->run();
+  // // right->run();
 
 
   // Use smaller input for build
