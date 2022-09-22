@@ -10,7 +10,6 @@
 #include "Relation.hpp"
 #include "Parser.hpp"
 
-#define UINT64MAX 18446744073709551615
 //---------------------------------------------------------------------------
 namespace std {
   /// Simple hash function to enable use with unordered_map

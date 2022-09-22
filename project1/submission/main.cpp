@@ -21,7 +21,7 @@ void cacheRelationRange(Joiner joiner) {
    for (uint64_t i = 0; i < joiner.relations.size(); ++i) {
       auto& r = joiner.relations[i];
       uint64_t min_, max_;
-      min_ = UINT64MAX; // 2^64 - 1
+      min_ = UINT64_MAX; // 2^64 - 1
       max_ = 0;
       for (uint64_t j = 0; j < r.columns.size(); ++j) {
          for (uint64_t rid = 0; rid < r.size; rid++) {
@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
    }
    cacheRelationRange(joiner);
 
-   QueryInfo i;
    int idx = 0;
    vector<future<string> > results;
    vector<string> lines;

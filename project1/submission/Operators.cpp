@@ -75,9 +75,6 @@ extern vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
 void FilterScan::run()
   // Run
 {
-  auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
-    return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
-  };
 
   // check any col is not in filter range
   bool emptyResult = false;
@@ -97,6 +94,40 @@ void FilterScan::run()
     if (emptyResult) return;
   }
   // check filter intersection is empty
+  auto applyFilterToRange = [](pair<uint64_t, uint64_t>& p1, FilterInfo& filter) {
+    auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+      return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+    };
+    pair<uint64_t, uint64_t> tmp;
+    switch (filter.comparison) {
+      case FilterInfo::Comparison::Equal:
+        tmp = {filter.constant, filter.constant};
+        break;
+      case FilterInfo::Comparison::Greater:
+        if (filter.constant == UINT64_MAX) return make_pair(1UL, 0UL); // empty
+        tmp = {filter.constant + 1, UINT64_MAX};
+        break;
+      case FilterInfo::Comparison::Less:
+        if (filter.constant == 0) return make_pair(1UL, 0UL); // empty
+        tmp = {0, filter.constant - 1};
+        break;
+    };
+    return getIntersection(p1, tmp);
+  };
+  for (int i = 0; i < filters.size(); ++i) {
+    pair<uint64_t, uint64_t> intersection = {0, UINT64_MAX};
+    intersection = applyFilterToRange(intersection, filters[i]);
+    if (intersection.first > intersection.second) return;
+    for (int j = 0; j < filters.size(); ++j) {
+      if (i == j) continue;
+      if (filters[i].filterColumn == filters[j].filterColumn) {
+        // rel, col same
+        intersection = applyFilterToRange(intersection, filters[j]);
+        if (intersection.first > intersection.second) return;
+      }
+    }
+  }
+
   for (uint64_t i=0;i<relation.size;++i) {
     bool pass=true;
     for (auto& f : filters) {
