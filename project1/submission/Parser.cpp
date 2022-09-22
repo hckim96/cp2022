@@ -117,14 +117,14 @@ void QueryInfo::resolveRelationIds()
 void QueryInfo::sameSelect() {
   for (auto& pInfo: predicates) {
     bool found = false;
-    for (auto s: same) {
+    for (auto& s: same) {
       if (s.count(pInfo.left)) {
         found = true;
         s.insert(pInfo.right);
         break;
       } else if (s.count(pInfo.right)) {
         found = true;
-        s.insert(pInfo.right);
+        s.insert(pInfo.left);
         break;
       }
     }
