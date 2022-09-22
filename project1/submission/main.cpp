@@ -5,7 +5,7 @@
 using namespace std;
 
 // query in  one batch max: 30 ~ 40
-uint64_t fsNumThread = 100;
+uint64_t fsNumThread = 40;
 ThreadPool pool(fsNumThread);
 
 
