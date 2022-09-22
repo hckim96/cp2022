@@ -70,9 +70,30 @@ bool FilterScan::applyFilter(uint64_t i,FilterInfo& f)
   return false;
 }
 //---------------------------------------------------------------------------
+extern vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
+
 void FilterScan::run()
   // Run
 {
+  auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+    return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+  };
+
+  // check any col is not in filter range
+  bool emptyResult = false;
+  for (auto& f: filters) {
+    auto colRange = rangeCache[f.filterColumn.relId][f.filterColumn.colId];
+    switch (f.comparison) {
+      case FilterInfo::Comparison::Equal:
+        if (f.constant < colRange.first || f.constant > colRange.second) emptyResult = true;
+      case FilterInfo::Comparison::Greater:
+        if (f.constant >= colRange.second) emptyResult = true;
+      case FilterInfo::Comparison::Less:
+        if (f.constant <= colRange.first) emptyResult = true;
+    };
+    if (emptyResult) return;
+  }
+  // check filter intersection is empty
   for (uint64_t i=0;i<relation.size;++i) {
     bool pass=true;
     for (auto& f : filters) {
