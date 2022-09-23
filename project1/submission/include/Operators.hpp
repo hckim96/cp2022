@@ -28,6 +28,8 @@ class Operator {
   std::vector<uint64_t*> resultColumns;
   /// The tmp results
   std::vector<std::vector<uint64_t>> tmpResults;
+  /// The tmp sums
+  std::vector<uint64_t> tmpSums;
 
 
   public:
@@ -39,6 +41,8 @@ class Operator {
   virtual void run() = 0;
   /// Get  materialized results
   virtual std::vector<uint64_t*> getResults();
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums();
   /// The result size
   uint64_t resultSize=0;
   /// The destructor
@@ -61,6 +65,8 @@ class Scan : public Operator {
   void run() override;
   /// Get  materialized results
   virtual std::vector<uint64_t*> getResults() override;
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
 //---------------------------------------------------------------------------
 class FilterScan : public Scan {
@@ -84,6 +90,8 @@ class FilterScan : public Scan {
   void run() override;
   /// Get  materialized results
   virtual std::vector<uint64_t*> getResults() override { return Operator::getResults(); }
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
 //---------------------------------------------------------------------------
 class Join : public Operator {
@@ -118,6 +126,9 @@ class Join : public Operator {
   bool require(SelectInfo info) override;
   /// Run
   void run() override;
+
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
 //---------------------------------------------------------------------------
 class SelfJoin : public Operator {
@@ -142,6 +153,8 @@ class SelfJoin : public Operator {
   bool require(SelectInfo info) override;
   /// Run
   void run() override;
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
 //---------------------------------------------------------------------------
 class Checksum : public Operator {

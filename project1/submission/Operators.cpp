@@ -40,6 +40,7 @@ bool FilterScan::require(SelectInfo info)
     // Add to results
     inputData.push_back(relation.columns[info.colId]);
     tmpResults.emplace_back();
+    tmpSums.emplace_back(0UL);
     unsigned colId=tmpResults.size()-1;
     select2ResultColId[info]=colId;
   }
@@ -49,8 +50,10 @@ bool FilterScan::require(SelectInfo info)
 void FilterScan::copy2Result(uint64_t id)
   // Copy to result
 {
-  for (unsigned cId=0;cId<inputData.size();++cId)
+  for (unsigned cId=0;cId<inputData.size();++cId) {
+    tmpSums[cId] += inputData[cId][id];
     tmpResults[cId].push_back(inputData[cId][id]);
+  }
   ++resultSize;
 }
 //---------------------------------------------------------------------------
@@ -138,6 +141,9 @@ void FilterScan::run()
   }
 }
 //---------------------------------------------------------------------------
+vector<uint64_t> Operator::getSums() {
+  return tmpSums;
+}
 vector<uint64_t*> Operator::getResults()
   // Get materialized results
 {
@@ -164,20 +170,28 @@ bool Join::require(SelectInfo info)
       return false;
 
     tmpResults.emplace_back();
+    tmpSums.emplace_back(0UL);
     requestedColumns.emplace(info);
   }
   return true;
 }
 //---------------------------------------------------------------------------
+// vector<uint64_t> Join::getSums() {
+//   return tmpSums;
+// }
 void Join::copy2Result(uint64_t leftId,uint64_t rightId)
   // Copy to result
 {
   unsigned relColId=0;
-  for (unsigned cId=0;cId<copyLeftData.size();++cId)
+  for (unsigned cId=0;cId<copyLeftData.size();++cId) {
+    tmpSums[relColId] += copyLeftData[cId][leftId];
     tmpResults[relColId++].push_back(copyLeftData[cId][leftId]);
+  }
 
-  for (unsigned cId=0;cId<copyRightData.size();++cId)
+  for (unsigned cId=0;cId<copyRightData.size();++cId) {
+    tmpSums[relColId] += copyRightData[cId][rightId];
     tmpResults[relColId++].push_back(copyRightData[cId][rightId]);
+  }
   ++resultSize;
 }
 //---------------------------------------------------------------------------
@@ -234,8 +248,10 @@ void Join::run()
 void SelfJoin::copy2Result(uint64_t id)
   // Copy to result
 {
-  for (unsigned cId=0;cId<copyData.size();++cId)
+  for (unsigned cId=0;cId<copyData.size();++cId) {
+    tmpSums[cId] += copyData[cId][id];
     tmpResults[cId].push_back(copyData[cId][id]);
+  }
   ++resultSize;
 }
 //---------------------------------------------------------------------------
@@ -246,6 +262,7 @@ bool SelfJoin::require(SelectInfo info)
     return true;
   if(input->require(info)) {
     tmpResults.emplace_back();
+    tmpSums.emplace_back(0UL);
     requiredIUs.emplace(info);
     return true;
   }
@@ -284,22 +301,13 @@ void Checksum::run()
     input->require(sInfo);
   }
   input->run();
-  auto results=input->getResults();
+  auto sums=input->getSums();
 
   for (auto& sInfo : colInfo) {
-    // if (checksumCache.count(sInfo)) {
-    //   checkSums.push_back(checksumCache[sInfo]);
-    //   continue;
-    // }
     auto colId=input->resolve(sInfo);
-    auto resultCol=results[colId];
-    uint64_t sum=0;
     resultSize=input->resultSize;
-    for (auto iter=resultCol,limit=iter+input->resultSize;iter!=limit;++iter)
-      sum+=*iter;
-    
-    // checksumCache[sInfo] = sum;
-    checkSums.push_back(sum);
+    checkSums.push_back(sums[colId]);
+    continue;
   }
 }
 //---------------------------------------------------------------------------
