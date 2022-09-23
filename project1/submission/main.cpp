@@ -9,7 +9,6 @@ uint64_t fsNumThread = 40;
 ThreadPool pool(fsNumThread);
 
 
-// unordered_map<SelectInfo, pair<uint64_t, uint64_t> > 
 // rel, colId -> range(pair)
 vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
 void cacheRelationRange(Joiner joiner) {
@@ -34,7 +33,6 @@ void cacheRelationRange(Joiner joiner) {
 }
 //---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-   
    Joiner joiner;
    // Read join relations
    string line;

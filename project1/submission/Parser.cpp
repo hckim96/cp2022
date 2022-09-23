@@ -153,7 +153,7 @@ void QueryInfo::addMoreFilterWithPredicates() {
 
   int prevSize = filters.size();
   for (int i = 0; i < prevSize; ++i) {
-    auto& fInfo = filters[i];
+    auto fInfo = filters[i];
     for (auto s: same) {
       auto it = s.find(fInfo.filterColumn);
       if (it != s.end()) {
@@ -176,8 +176,8 @@ void QueryInfo::addFilterWithPredicateAndColRange() {
   };
 
   for (auto& pInfo: predicates) {
-    auto& left = pInfo.left;
-    auto& right = pInfo.right;
+    auto left = pInfo.left;
+    auto right = pInfo.right;
 
     auto lRange = rangeCache[left.relId][left.colId];
     auto rRange = rangeCache[right.relId][right.colId];
@@ -185,16 +185,16 @@ void QueryInfo::addFilterWithPredicateAndColRange() {
 
     if (l > r) {
       // no intersection
-      filters.push_back(FilterInfo(left, lRange.second, FilterInfo::Greater));
-      filters.push_back(FilterInfo(right, rRange.second, FilterInfo::Greater));
+      filters.emplace_back(left, lRange.second, FilterInfo::Greater);
+      filters.emplace_back(right, rRange.second, FilterInfo::Greater);
     } else if (l == r) {
-      filters.push_back(FilterInfo(left, l, FilterInfo::Equal));
-      filters.push_back(FilterInfo(right, l, FilterInfo::Equal));
+      filters.emplace_back(left, l, FilterInfo::Equal);
+      filters.emplace_back(right, l, FilterInfo::Equal);
     } else {
-      if (lRange.first != l && l) filters.push_back(FilterInfo(left, l - 1, FilterInfo::Greater));
-      if (lRange.second != r && r) filters.push_back(FilterInfo(left, r + 1, FilterInfo::Less));
-      if (rRange.first != l && l) filters.push_back(FilterInfo(right, l - 1, FilterInfo::Greater));
-      if (rRange.second != r && r) filters.push_back(FilterInfo(right, r + 1, FilterInfo::Less));
+      if (lRange.first != l && l) filters.emplace_back(left, l - 1, FilterInfo::Greater);
+      if (lRange.second != r && r) filters.emplace_back(left, r + 1, FilterInfo::Less);
+      if (rRange.first != l && l) filters.emplace_back(right, l - 1, FilterInfo::Greater);
+      if (rRange.second != r && r) filters.emplace_back(right, r + 1, FilterInfo::Less);
     }
   }
 }
