@@ -1,12 +1,12 @@
 #include <iostream>
 #include "Joiner.hpp"
 #include "Parser.hpp"
-#include "ThreadPool.h"
+#include "BS_thread_pool.hpp"
 using namespace std;
 
 // query in  one batch max: 30 ~ 40
 uint64_t fsNumThread = 40;
-ThreadPool pool(fsNumThread);
+BS::thread_pool pool(fsNumThread);
 
 
 // rel, colId -> range(pair)
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
       lines.push_back(line);
       string tmp = line;
       results.emplace_back(
-         pool.enqueue([&joiners, &lines, idx] {
+         pool.submit([&joiners, &lines, idx] {
             QueryInfo i;
             i.parseQuery(lines[idx]);
             return joiners[idx].join(i);

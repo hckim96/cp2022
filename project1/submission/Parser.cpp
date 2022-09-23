@@ -229,6 +229,33 @@ void QueryInfo::sortPredicates() {
   sort(predicates.begin(), predicates.end(), f);
 }
 
+void QueryInfo::removeJoin() {
+  // not in sinfo,, and 
+
+  auto notInSelection = [&selections=selections](SelectInfo& s) {
+    for (auto& sInfo: selections) if (sInfo == s) return true;
+    return false;
+  };
+
+  vector<int> remove;
+  for (int i = 0; i < predicates.size(); ++i) {
+    auto& left = predicates[i].left;
+    auto& right = predicates[i].right;
+    if (notInSelection(left) || notInSelection(right)) remove.push_back(i);
+  }
+  if (remove.size() == 0) return;
+  
+  int idx = 0;
+  vector<PredicateInfo> newPredicates;
+  for (int i = 0; i < predicates.size(); ++i) {
+    if (idx < remove.size() && remove[idx] == i) {
+      ++idx;
+    } else {
+      newPredicates.push_back(predicates[i]);
+    }
+  }
+  predicates = newPredicates;
+}
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
 {
@@ -244,6 +271,7 @@ void QueryInfo::parseQuery(string& rawQuery)
   resolveRelationIds();
   addFilterWithPredicateAndColRange();
   sortPredicates();
+  // removeJoin();
 }
 //---------------------------------------------------------------------------
 void QueryInfo::clear()

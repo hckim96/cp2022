@@ -135,6 +135,9 @@ class QueryInfo {
    */
    void sortPredicates();
 
+
+   void removeJoin();
+   
    /// Dump text format
    std::string dumpText();
    /// Dump SQL
