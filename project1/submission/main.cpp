@@ -11,6 +11,7 @@ ThreadPool pool(fsNumThread);
 
 // rel, colId -> range(pair)
 vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
+vector<uint64_t> relationSizeCache;
 void cacheRelationRange(Joiner joiner) {
    rangeCache.resize(joiner.relations.size());
    for (int i = 0; i < joiner.relations.size(); ++i) {
@@ -19,6 +20,7 @@ void cacheRelationRange(Joiner joiner) {
    // care
    for (uint64_t i = 0; i < joiner.relations.size(); ++i) {
       auto& r = joiner.relations[i];
+      relationSizeCache.push_back(r.size);
       uint64_t min_, max_;
       min_ = UINT64_MAX; // 2^64 - 1
       max_ = 0;

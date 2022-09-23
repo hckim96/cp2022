@@ -198,6 +198,36 @@ void QueryInfo::addFilterWithPredicateAndColRange() {
     }
   }
 }
+extern vector<uint64_t> relationSizeCache;
+void QueryInfo::sortPredicates() {
+  auto f = [&filters = filters](PredicateInfo& p1, PredicateInfo& p2) {
+    int fs1 = 0;
+    int fs2 = 0;
+    int fs3 = 0;
+    int fs4 = 0;
+    uint64_t relsize1 = relationSizeCache[p1.left.relId];
+    uint64_t relsize2 = relationSizeCache[p1.right.relId];
+    uint64_t relsize3 = relationSizeCache[p2.left.relId];
+    uint64_t relsize4 = relationSizeCache[p2.right.relId];
+    for (auto& f: filters) {
+      if (f.filterColumn == p1.left) fs1++;
+      if (f.filterColumn == p1.right) fs2++;
+      if (f.filterColumn == p2.left) fs3++;
+      if (f.filterColumn == p2.right) fs3++;
+    }
+    
+    if (fs1 < fs2) swap(p1.left, p1.right);
+    if (fs1 == fs2 && relsize1 > relsize2) swap(p1.left, p1.right);
+    if (fs3 < fs4) swap(p2.left, p2.right);
+    if (fs3 == fs4 && relsize3 > relsize4) swap(p2.left, p2.right);
+
+    if (fs1 + fs2 > fs3 + fs4) return true;
+    if (fs1 + fs2 == fs3 + fs4 && relsize1 + relsize2 < relsize3 + relsize4) return true;
+    return false;
+  };
+
+  sort(predicates.begin(), predicates.end(), f);
+}
 
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
@@ -213,6 +243,7 @@ void QueryInfo::parseQuery(string& rawQuery)
   addMoreFilterWithPredicates();
   resolveRelationIds();
   addFilterWithPredicateAndColRange();
+  sortPredicates();
 }
 //---------------------------------------------------------------------------
 void QueryInfo::clear()
