@@ -347,14 +347,14 @@ void QueryInfo::parseQuery(string& rawQuery)
   parseRelationIds(queryParts[0]);
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
-  resolveRelationIds();
-  sameSelect(); // should be after resolve
-  addMoreFilterWithPredicates(); // should be before resolve
-  resolveRelationIds();
-  addFilterWithPredicateAndColRange();
-  sortPredicates();
-  // sameBinding();
-  finalize(); // should be after resolve
+  // resolveRelationIds();
+  // sameSelect(); // should be after resolve
+  // addMoreFilterWithPredicates(); // should be before resolve
+  // resolveRelationIds();
+  // addFilterWithPredicateAndColRange();
+  // sortPredicates();
+  // // sameBinding();
+  // finalize(); // should be after resolve
   resolveRelationIds();
   // removeJoin(); not correctly implemented
   // TODO: removeRedundantFilter();
