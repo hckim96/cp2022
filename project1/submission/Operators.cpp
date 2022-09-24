@@ -237,40 +237,19 @@ void Join::run()
   auto leftColId=left->resolve(pInfo.left);
   auto rightColId=right->resolve(pInfo.right);
 
-  if (isSelf) {
-    // Build phase
-    auto leftKeyColumn=leftInputData[leftColId];
-    for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
-      hashTable2[leftKeyColumn[i]].push_back(i);
-    }
-    auto rightKeyColumn=rightInputData[rightColId];
-    for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
-      hashTable3[rightKeyColumn[i]].push_back(i);
-    }
-    // Probe phase
-    for (auto& e1: hashTable2) {
-      for (auto& v2: hashTable3[e1.first]) {
-        auto& v1 = e1.second;
-        for (auto& i: v1) {
-          copy2Result(i, v2);
-        }
-      }
-    }
-  } else {
-    // Build phase
-    auto leftKeyColumn=leftInputData[leftColId];
-    hashTable.reserve(left->resultSize*2);
-    for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
-      hashTable.emplace(leftKeyColumn[i],i);
-    }
-    // Probe phase
-    auto rightKeyColumn=rightInputData[rightColId];
-    for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
-      auto rightKey=rightKeyColumn[i];
-      auto range=hashTable.equal_range(rightKey);
-      for (auto iter=range.first;iter!=range.second;++iter) {
-        copy2Result(iter->second,i);
-      }
+  // Build phase
+  auto leftKeyColumn=leftInputData[leftColId];
+  hashTable.reserve(left->resultSize*2);
+  for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
+    hashTable.emplace(leftKeyColumn[i],i);
+  }
+  // Probe phase
+  auto rightKeyColumn=rightInputData[rightColId];
+  for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
+    auto rightKey=rightKeyColumn[i];
+    auto range=hashTable.equal_range(rightKey);
+    for (auto iter=range.first;iter!=range.second;++iter) {
+      copy2Result(iter->second,i);
     }
   }
   #ifdef MY_DEBUG
@@ -359,5 +338,4 @@ void Checksum::run()
   tt.cerrget("\tgettingsum.. in checksumrun: ");
   #endif
 }
-
 //---------------------------------------------------------------------------
