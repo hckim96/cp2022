@@ -329,11 +329,10 @@ void Checksum::run()
   tt.restart();
   #endif
 
-  auto sums=input->getSums();
   #ifdef MY_DEBUG
   tt.cerrget("\tgetsums(): ");
   #endif
-  auto results=input->getResults();
+  auto sums=input->getSums();
   #ifdef MY_DEBUG
   tt.restart();
   #endif
