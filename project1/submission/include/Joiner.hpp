@@ -5,6 +5,8 @@
 #include "Operators.hpp"
 #include "Relation.hpp"
 #include "Parser.hpp"
+#include "timer.hpp"
+
 //---------------------------------------------------------------------------
 class Joiner {
 

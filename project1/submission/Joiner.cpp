@@ -60,7 +60,7 @@ string Joiner::join(QueryInfo& query)
 {
   //cerr << query.dumpText() << endl;
   set<unsigned> usedRelations;
-
+  
   // We always start with the first join predicate and append the other joins to it (--> left-deep join trees)
   // You might want to choose a smarter join ordering ...
   auto& firstJoin=query.predicates[0];
@@ -74,16 +74,25 @@ string Joiner::join(QueryInfo& query)
     auto& pInfo=query.predicates[i];
     auto& leftInfo=pInfo.left; auto& rightInfo=pInfo.right;
     unique_ptr<Operator> left, right;
+    bool isSelf = false;
     switch(analyzeInputOfJoin(usedRelations,leftInfo,rightInfo)) {
       case QueryGraphProvides::Left:
         left=move(root);
         right=addScan(usedRelations,rightInfo,query);
-        root=make_unique<Join>(move(left),move(right),pInfo);
+        for (int j = 0; j < i; ++j) {
+          if (query.predicates[j].left.relId == rightInfo.relId) isSelf = true;
+          if (query.predicates[j].right.relId == rightInfo.relId) isSelf = true;
+        }
+        root=make_unique<Join>(move(left),move(right),pInfo, isSelf);
         break;
       case QueryGraphProvides::Right:
         left=addScan(usedRelations,leftInfo,query);
         right=move(root);
-        root=make_unique<Join>(move(left),move(right),pInfo);
+        for (int j = 0; j < i; ++j) {
+          if (query.predicates[j].left.relId == leftInfo.relId) isSelf = true;
+          if (query.predicates[j].right.relId == leftInfo.relId) isSelf = true;
+        }
+        root=make_unique<Join>(move(left),move(right),pInfo, isSelf);
         break;
       case QueryGraphProvides::Both:
         // All relations of this join are already used somewhere else in the query.
@@ -99,8 +108,13 @@ string Joiner::join(QueryInfo& query)
   }
 
   Checksum checkSum(move(root),query.selections);
+  #ifdef MY_DEBUG
+  Timer tt;
+  #endif
   checkSum.run();
-
+  #ifdef MY_DEBUG
+  tt.cerrget("checksum.run(): ");
+  #endif
 
   stringstream out;
   auto& results=checkSum.checkSums;

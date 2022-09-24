@@ -121,6 +121,8 @@ class QueryInfo {
 
    void sameSelect();
 
+   void sameBinding();
+
    void addMoreFilterWithPredicates();
    
    /*

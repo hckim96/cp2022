@@ -114,6 +114,27 @@ void QueryInfo::resolveRelationIds()
   }
 }
 //---------------------------------------------------------------------------
+void QueryInfo::sameBinding() {
+  for (int i = 0; i < relationIds.size(); ++i) {
+    for (int j = 0; j < i; ++j) {
+      if (relationIds[i] == relationIds[j]) {
+        for (auto& sInfo : selections) {
+          if (sInfo.relId == relationIds[i]) sInfo.binding = j;
+        }
+        // Predicates
+        for (auto& pInfo : predicates) {
+          if (pInfo.left.relId == relationIds[i]) pInfo.left.binding = j;
+          if (pInfo.right.relId == relationIds[i]) pInfo.right.binding = j;
+        }
+        // Filters
+        for (auto& fInfo : filters) {
+          if (fInfo.filterColumn.relId == relationIds[i]) fInfo.filterColumn.binding = j;
+        }
+        break;
+      }
+    }
+  }
+}
 void QueryInfo::sameSelect() {
   for (auto& pInfo: predicates) {
     bool found = false;
@@ -174,6 +195,18 @@ void QueryInfo::addFilterWithPredicateAndColRange() {
   auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
     return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
   };
+
+  for (auto& s: same) {
+    pair<uint64_t, uint64_t> intersection = {0, UINT64_MAX};
+    for (auto& sInfo: s) {
+      intersection = getIntersection(intersection, rangeCache[sInfo.relId][sInfo.colId]);
+    }
+    // if (intersection.first > intersection.second) continue;
+    for (auto& sInfo: s) {
+      if (intersection.first != 0) filters.emplace_back(sInfo, intersection.first - 1, FilterInfo::Greater);
+      if (intersection.second != UINT64_MAX) filters.emplace_back(sInfo, intersection.second + 1, FilterInfo::Less);
+    }
+  }
 
   for (auto& pInfo: predicates) {
     auto left = pInfo.left;
@@ -266,12 +299,14 @@ void QueryInfo::parseQuery(string& rawQuery)
   parseRelationIds(queryParts[0]);
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
+  resolveRelationIds();
+  // sameBinding();
   sameSelect();
   addMoreFilterWithPredicates();
-  resolveRelationIds();
   addFilterWithPredicateAndColRange();
   sortPredicates();
-  // removeJoin();
+  // removeJoin(); not correctly implemented
+  // TODO: removeRedundantFilter();
 }
 //---------------------------------------------------------------------------
 void QueryInfo::clear()

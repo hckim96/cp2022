@@ -9,6 +9,7 @@
 #include <set>
 #include "Relation.hpp"
 #include "Parser.hpp"
+#include <map>
 
 //---------------------------------------------------------------------------
 namespace std {
@@ -108,6 +109,8 @@ class Join : public Operator {
 
   /// The hash table for the join
   HT hashTable;
+  std::map<uint64_t, std::vector<uint64_t> > hashTable2;
+  std::map<uint64_t, std::vector<uint64_t> > hashTable3;
   /// Columns that have to be materialized
   std::unordered_set<SelectInfo> requestedColumns;
   /// Left/right columns that have been requested
@@ -120,8 +123,13 @@ class Join : public Operator {
   std::vector<uint64_t*>copyLeftData,copyRightData;
 
   public:
+  /// tmp
+  bool isSelf=false;
+
   /// The constructor
   Join(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo) : left(std::move(left)), right(std::move(right)), pInfo(pInfo) {};
+  /// The constructor2
+  Join(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo, bool isSelf) : left(std::move(left)), right(std::move(right)), pInfo(pInfo), isSelf(isSelf) {};
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include "timer.hpp"
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
@@ -77,6 +78,9 @@ extern vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
 void FilterScan::run()
   // Run
 {
+  #ifdef MY_DEBUG
+  Timer fs;
+  #endif
 
   // check any col is not in filter range
   bool emptyResult = false;
@@ -138,6 +142,9 @@ void FilterScan::run()
     if (pass)
       copy2Result(i);
   }
+  #ifdef MY_DEBUG
+  fs.cerrget("\t\tfsscan->run(): ");
+  #endif
 }
 //---------------------------------------------------------------------------
 vector<uint64_t> Operator::getSums() {
@@ -197,6 +204,9 @@ void Join::copy2Result(uint64_t leftId,uint64_t rightId)
 void Join::run()
   // Run
 {
+  #ifdef MY_DEBUG
+  Timer jj;
+  #endif
   left->require(pInfo.left);
   right->require(pInfo.right);
   left->run();
@@ -227,21 +237,45 @@ void Join::run()
   auto leftColId=left->resolve(pInfo.left);
   auto rightColId=right->resolve(pInfo.right);
 
-  // Build phase
-  auto leftKeyColumn=leftInputData[leftColId];
-  hashTable.reserve(left->resultSize*2);
-  for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
-    hashTable.emplace(leftKeyColumn[i],i);
-  }
-  // Probe phase
-  auto rightKeyColumn=rightInputData[rightColId];
-  for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
-    auto rightKey=rightKeyColumn[i];
-    auto range=hashTable.equal_range(rightKey);
-    for (auto iter=range.first;iter!=range.second;++iter) {
-      copy2Result(iter->second,i);
+  if (isSelf) {
+    // Build phase
+    auto leftKeyColumn=leftInputData[leftColId];
+    for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
+      hashTable2[leftKeyColumn[i]].push_back(i);
+    }
+    auto rightKeyColumn=rightInputData[rightColId];
+    for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
+      hashTable3[rightKeyColumn[i]].push_back(i);
+    }
+    // Probe phase
+    for (auto& e1: hashTable2) {
+      for (auto& v2: hashTable3[e1.first]) {
+        auto& v1 = e1.second;
+        for (auto& i: v1) {
+          copy2Result(i, v2);
+        }
+      }
+    }
+  } else {
+    // Build phase
+    auto leftKeyColumn=leftInputData[leftColId];
+    hashTable.reserve(left->resultSize*2);
+    for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
+      hashTable.emplace(leftKeyColumn[i],i);
+    }
+    // Probe phase
+    auto rightKeyColumn=rightInputData[rightColId];
+    for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
+      auto rightKey=rightKeyColumn[i];
+      auto range=hashTable.equal_range(rightKey);
+      for (auto iter=range.first;iter!=range.second;++iter) {
+        copy2Result(iter->second,i);
+      }
     }
   }
+  #ifdef MY_DEBUG
+  jj.cerrget("\t\tjoin->run(): ");
+  #endif
 }
 //---------------------------------------------------------------------------
 void SelfJoin::copy2Result(uint64_t id)
@@ -299,14 +333,31 @@ void Checksum::run()
   for (auto& sInfo : colInfo) {
     input->require(sInfo);
   }
+  #ifdef MY_DEBUG
+  Timer tt;
+  #endif
   input->run();
-  auto sums=input->getSums();
+  #ifdef MY_DEBUG
+  tt.cerrget("\tinput->run() in checksumrun: ");
+  tt.restart();
+  #endif
 
+  auto sums=input->getSums();
+  #ifdef MY_DEBUG
+  tt.cerrget("\tgetsums(): ");
+  #endif
+  auto results=input->getResults();
+  #ifdef MY_DEBUG
+  tt.restart();
+  #endif
   for (auto& sInfo : colInfo) {
     auto colId=input->resolve(sInfo);
     resultSize=input->resultSize;
     checkSums.push_back(sums[colId]);
-    continue;
   }
+  #ifdef MY_DEBUG
+  tt.cerrget("\tgettingsum.. in checksumrun: ");
+  #endif
 }
+
 //---------------------------------------------------------------------------
