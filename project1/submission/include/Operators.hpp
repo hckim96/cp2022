@@ -34,6 +34,8 @@ class Operator {
 
 
   public:
+  /// is root of the tree(if true, calculate sum while probing)
+  bool isRoot=false;
   /// Require a column and add it to results
   virtual bool require(SelectInfo info) = 0;
   /// Resolves a column

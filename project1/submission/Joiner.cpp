@@ -97,7 +97,7 @@ string Joiner::join(QueryInfo& query)
         break;
     };
   }
-
+  root->isRoot = true;
   Checksum checkSum(move(root),query.selections);
   #ifdef MY_DEBUG
   Timer tt;

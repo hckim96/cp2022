@@ -289,6 +289,54 @@ void QueryInfo::removeJoin() {
   }
   predicates = newPredicates;
 }
+void QueryInfo::finalize() {
+  auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+    return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+  };
+  auto applyFilterToRange = [](pair<uint64_t, uint64_t>& p1, FilterInfo& filter) {
+    auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+      return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+    };
+    pair<uint64_t, uint64_t> tmp;
+    switch (filter.comparison) {
+      case FilterInfo::Comparison::Equal:
+        tmp = {filter.constant, filter.constant};
+        break;
+      case FilterInfo::Comparison::Greater:
+        if (filter.constant == UINT64_MAX) return make_pair(1UL, 0UL); // empty
+        tmp = {filter.constant + 1, UINT64_MAX};
+        break;
+      case FilterInfo::Comparison::Less:
+        if (filter.constant == 0) return make_pair(1UL, 0UL); // empty
+        tmp = {0, filter.constant - 1};
+        break;
+    };
+    return getIntersection(p1, tmp);
+  };
+
+  vector<FilterInfo> newFilters;
+  map<SelectInfo, pair<uint64_t, uint64_t> > m;
+  for (auto& fInfo: filters) {
+    if (m.count(fInfo.filterColumn)) {
+      m[fInfo.filterColumn] = applyFilterToRange(m[fInfo.filterColumn], fInfo);
+    } else {
+      pair<uint64_t, uint64_t> p = {0UL, UINT64_MAX};
+      m[fInfo.filterColumn] = applyFilterToRange(p, fInfo);
+    }
+  }
+  for (auto& [a, b]: m) {
+    auto range = rangeCache[a.relId][a.colId];
+    b = getIntersection(b, range);
+    if (b.first > b.second) {
+      newFilters.emplace_back(a, UINT64_MAX, FilterInfo::Greater);
+      continue;
+    }
+    if (range.first != b.first) newFilters.emplace_back(a, b.first - 1, FilterInfo::Greater);
+    if (range.second != b.second) newFilters.emplace_back(a, b.second + 1, FilterInfo::Less);
+  }
+  filters = newFilters;
+}
+
 void QueryInfo::parseQuery(string& rawQuery)
   // Parse query [RELATIONS]|[PREDICATES]|[SELECTS]
 {
@@ -300,11 +348,14 @@ void QueryInfo::parseQuery(string& rawQuery)
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
   resolveRelationIds();
-  // sameBinding();
-  sameSelect();
-  addMoreFilterWithPredicates();
+  sameSelect(); // should be after resolve
+  addMoreFilterWithPredicates(); // should be before resolve
+  resolveRelationIds();
   addFilterWithPredicateAndColRange();
   sortPredicates();
+  // sameBinding();
+  finalize(); // should be after resolve
+  resolveRelationIds();
   // removeJoin(); not correctly implemented
   // TODO: removeRedundantFilter();
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 
 #include "Relation.hpp"
 //---------------------------------------------------------------------------
@@ -137,6 +138,7 @@ class QueryInfo {
    */
    void sortPredicates();
 
+   void finalize();
 
    void removeJoin();
    

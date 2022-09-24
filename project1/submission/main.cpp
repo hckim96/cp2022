@@ -70,18 +70,17 @@ int main(int argc, char* argv[]) {
 
    int idx = 0;
    vector<future<string> > results;
-   vector<string> lines;
+   vector<string> lines(fsNumThread);
    while (getline(cin, line)) {
       if (line == "F") {
          for (auto&& e: results) {
             cout << e.get();
          }
          results.clear();
-         lines.clear();
          idx = 0;
          continue;
       } // End of a batch
-      lines.push_back(line);
+      lines[idx] = line;
       string tmp = line;
       results.emplace_back(
          pool.submit([&joiners, &lines, idx] {
