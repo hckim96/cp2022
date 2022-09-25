@@ -9,6 +9,7 @@
 #include <set>
 #include "Relation.hpp"
 #include "Parser.hpp"
+#include "../BS_thread_pool.hpp"
 #include <map>
 
 //---------------------------------------------------------------------------
@@ -111,8 +112,6 @@ class Join : public Operator {
 
   /// The hash table for the join
   HT hashTable;
-  std::map<uint64_t, std::vector<uint64_t> > hashTable2;
-  std::map<uint64_t, std::vector<uint64_t> > hashTable3;
   /// Columns that have to be materialized
   std::unordered_set<SelectInfo> requestedColumns;
   /// Left/right columns that have been requested
@@ -132,6 +131,47 @@ class Join : public Operator {
   Join(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo) : left(std::move(left)), right(std::move(right)), pInfo(pInfo) {};
   /// The constructor2
   Join(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo, bool isSelf) : left(std::move(left)), right(std::move(right)), pInfo(pInfo), isSelf(isSelf) {};
+  /// Require a column and add it to results
+  bool require(SelectInfo info) override;
+  /// Run
+  void run() override;
+
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
+};
+class SMJoin : public Operator {
+  /// The input operators
+  std::unique_ptr<Operator> left, right;
+  /// The join predicate info
+  PredicateInfo& pInfo;
+  /// Copy tuple to result
+  void copy2Result(uint64_t leftId,uint64_t rightId);
+  /// Create mapping for bindings
+  void createMappingForBindings();
+
+  using HT=std::unordered_multimap<uint64_t,uint64_t>;
+
+  /// The hash table for the join
+  HT hashTable;
+  /// Columns that have to be materialized
+  std::unordered_set<SelectInfo> requestedColumns;
+  /// Left/right columns that have been requested
+  std::vector<SelectInfo> requestedColumnsLeft,requestedColumnsRight;
+
+
+  /// The entire input data of left and right
+  std::vector<uint64_t*> leftInputData,rightInputData;
+  /// The input data that has to be copied
+  std::vector<uint64_t*>copyLeftData,copyRightData;
+
+  public:
+  /// tmp
+  bool isSelf=false;
+
+  /// The constructor
+  SMJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo) : left(std::move(left)), right(std::move(right)), pInfo(pInfo) {};
+  /// The constructor2
+  SMJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo, bool isSelf) : left(std::move(left)), right(std::move(right)), pInfo(pInfo), isSelf(isSelf) {};
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run

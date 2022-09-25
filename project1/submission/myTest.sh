@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./compile.sh && ./runTestharness.sh && ./runTestharness.sh && ./runTestharness.sh && ./runTestharness.sh && ./runTestharness.sh
+./compile.sh && ./excludeMyRunTestHarness.sh && ./excludeMyRunTestHarness.sh && ./excludeMyRunTestHarness.sh && ./excludeMyRunTestHarness.sh && ./excludeMyRunTestHarness.sh

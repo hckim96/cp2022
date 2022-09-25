@@ -263,6 +263,122 @@ void Join::run()
   #endif
 }
 //---------------------------------------------------------------------------
+bool SMJoin::require(SelectInfo info)
+  // Require a column and add it to results
+{
+  if (requestedColumns.count(info)==0) {
+    bool success=false;
+    if(left->require(info)) {
+      requestedColumnsLeft.emplace_back(info);
+      success=true;
+    } else if (right->require(info)) {
+      success=true;
+      requestedColumnsRight.emplace_back(info);
+    }
+    if (!success)
+      return false;
+
+    tmpResults.emplace_back();
+    tmpSums.emplace_back(0UL);
+    requestedColumns.emplace(info);
+  }
+  return true;
+}
+//---------------------------------------------------------------------------
+// vector<uint64_t> SMJoin::getSums() {
+//   return tmpSums;
+// }
+void SMJoin::copy2Result(uint64_t leftId,uint64_t rightId)
+  // Copy to result
+{
+  unsigned relColId=0;
+  for (unsigned cId=0;cId<copyLeftData.size();++cId) {
+    if (isRoot) {
+      tmpSums[relColId] += copyLeftData[cId][leftId];
+    }
+    tmpResults[relColId++].push_back(copyLeftData[cId][leftId]);
+  }
+
+  for (unsigned cId=0;cId<copyRightData.size();++cId) {
+    if (isRoot) {
+      tmpSums[relColId] += copyRightData[cId][rightId];
+    }
+    tmpResults[relColId++].push_back(copyRightData[cId][rightId]);
+  }
+  ++resultSize;
+}
+void SMJoin::run()
+  // Run
+{
+  #ifdef MY_DEBUG
+  Timer jj;
+  #endif
+  left->require(pInfo.left);
+  right->require(pInfo.right);
+  left->run();
+  right->run();
+
+
+  // Use smaller input for build
+  if (left->resultSize>right->resultSize) {
+    swap(left,right);
+    swap(pInfo.left,pInfo.right);
+    swap(requestedColumnsLeft,requestedColumnsRight);
+  }
+
+  auto leftInputData=left->getResults();
+  auto rightInputData=right->getResults();
+
+  // Resolve the input columns
+  unsigned resColId=0;
+  for (auto& info : requestedColumnsLeft) {
+    copyLeftData.push_back(leftInputData[left->resolve(info)]);
+    select2ResultColId[info]=resColId++;
+  }
+  for (auto& info : requestedColumnsRight) {
+    copyRightData.push_back(rightInputData[right->resolve(info)]);
+    select2ResultColId[info]=resColId++;
+  }
+
+  auto leftColId=left->resolve(pInfo.left);
+  auto rightColId=right->resolve(pInfo.right);
+
+  // sort left
+  auto leftKeyColumn=leftInputData[leftColId];
+  vector<pair<uint64_t, uint64_t> > leftIdx;
+  for (uint64_t i = 0; i < left->resultSize; ++i) {
+    leftIdx.emplace_back(leftKeyColumn[i], i);
+  }
+  sort(leftIdx.begin(), leftIdx.end());
+
+  // sort right
+  auto rightKeyColumn=rightInputData[rightColId];
+  vector<pair<uint64_t, uint64_t> > rightIdx;
+  for (uint64_t i = 0; i < right->resultSize; ++i) {
+    rightIdx.emplace_back(rightKeyColumn[i], i);
+  }
+  sort(rightIdx.begin(), rightIdx.end());
+
+  uint64_t l = 0, r = 0, ls = 0, rs = 0;
+  while (l < left->resultSize && r < right -> resultSize) {
+    while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first < rightIdx[r].first) ++l;
+    while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first > rightIdx[r].first) ++r;
+    rs = r;
+    while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first == rightIdx[r].first) {
+      while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first == rightIdx[r].first) {
+        copy2Result(leftIdx[l].second, rightIdx[r].second);
+        ++r;
+      }
+      r = rs;
+      ++l;
+    }
+  }
+
+  #ifdef MY_DEBUG
+  jj.cerrget("\t\tjoin->run(): ");
+  #endif
+}
+//---------------------------------------------------------------------------
 void SelfJoin::copy2Result(uint64_t id)
   // Copy to result
 {

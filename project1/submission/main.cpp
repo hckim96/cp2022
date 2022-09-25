@@ -17,14 +17,14 @@ vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
 vector<uint64_t> relationSizeCache;
 
 // rel col key = cnt
-// vector<vector<unordered_map<uint64_t, uint64_t> > > histogram;
+vector<vector<unordered_map<uint64_t, uint64_t> > > histogram;
 
 void cacheRelationRange(Joiner joiner) {
    rangeCache.resize(joiner.relations.size());
-   // histogram.resize(joiner.relations.size());
+   histogram.resize(joiner.relations.size());
    for (int i = 0; i < joiner.relations.size(); ++i) {
       rangeCache[i].resize(joiner.relations[i].columns.size());
-      // histogram[i].resize(joiner.relations[i].columns.size());
+      histogram[i].resize(joiner.relations[i].columns.size());
    }
    // care
    for (uint64_t i = 0; i < joiner.relations.size(); ++i) {
@@ -37,7 +37,7 @@ void cacheRelationRange(Joiner joiner) {
          for (uint64_t rid = 0; rid < r.size; rid++) {
             min_ = min(min_, r.columns[j][rid]);
             max_ = max(max_, r.columns[j][rid]);
-            // histogram[i][j][r.columns[j][rid]]++;
+            histogram[i][j][r.columns[j][rid]]++;
          }
          rangeCache[i][j] = {min_, max_};
       }

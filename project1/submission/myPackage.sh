@@ -1,7 +1,9 @@
 #!/bin/bash
 GIT=`which git`
-hconnectRepo="/home/ubuntu/2022_ite4065_2016025332/project1"
-localRepo="/home/ubuntu/cp2022/project1/submission"
+# hconnectRepo="/home/ubuntu/2022_ite4065_2016025332/project1"
+# localRepo="/home/ubuntu/cp2022/project1/submission"
+hconnectRepo="/home/hckim96/2022_ite4065_2016025332/project1"
+localRepo="/home/hckim96/cp2022/project1/submission"
 
 if [ -z $1 ]
 then
