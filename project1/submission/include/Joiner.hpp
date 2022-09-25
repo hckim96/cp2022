@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdint>
 #include <set>
+#include <random>
 #include "Operators.hpp"
 #include "Relation.hpp"
 #include "Parser.hpp"

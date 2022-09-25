@@ -40,7 +40,9 @@ bool FilterScan::require(SelectInfo info)
     // Add to results
     inputData.push_back(relation.columns[info.colId]);
     tmpResults.emplace_back();
-    tmpSums.emplace_back(0UL);
+    if (isRoot) {
+      tmpSums.emplace_back(0UL);
+    }
     unsigned colId=tmpResults.size()-1;
     select2ResultColId[info]=colId;
   }
@@ -178,7 +180,9 @@ bool Join::require(SelectInfo info)
       return false;
 
     tmpResults.emplace_back();
-    tmpSums.emplace_back(0UL);
+    if (isRoot) {
+      tmpSums.emplace_back(0UL);
+    }
     requestedColumns.emplace(info);
   }
   return true;
@@ -279,7 +283,9 @@ bool SMJoin::require(SelectInfo info)
       return false;
 
     tmpResults.emplace_back();
-    tmpSums.emplace_back(0UL);
+    if (isRoot) {
+      tmpSums.emplace_back(0UL);
+    }
     requestedColumns.emplace(info);
   }
   return true;
@@ -398,7 +404,9 @@ bool SelfJoin::require(SelectInfo info)
     return true;
   if(input->require(info)) {
     tmpResults.emplace_back();
-    tmpSums.emplace_back(0UL);
+    if (isRoot) {
+      tmpSums.emplace_back(0UL);
+    }
     requiredIUs.emplace(info);
     return true;
   }

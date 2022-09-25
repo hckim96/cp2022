@@ -63,10 +63,20 @@ string Joiner::join(QueryInfo& query)
 
   // We always start with the first join predicate and append the other joins to it (--> left-deep join trees)
   // You might want to choose a smarter join ordering ...
+  // random order 
+  unsigned seed = std::chrono::system_clock::now()
+                      .time_since_epoch()
+                      .count();
+  shuffle(query.predicates.begin(), query.predicates.end(), std::default_random_engine(seed));
   auto& firstJoin=query.predicates[0];
   auto left=addScan(usedRelations,firstJoin.left,query);
   auto right=addScan(usedRelations,firstJoin.right,query);
-  unique_ptr<Operator> root=make_unique<SMJoin>(move(left),move(right),firstJoin);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> dis(0, 1);
+  unique_ptr<Operator> root;
+  if (dis(gen)) root=make_unique<Join>(move(left), move(right), firstJoin);
+  else root=make_unique<SMJoin>(move(left),move(right),firstJoin);
 
 
 
@@ -78,12 +88,14 @@ string Joiner::join(QueryInfo& query)
       case QueryGraphProvides::Left:
         left=move(root);
         right=addScan(usedRelations,rightInfo,query);
-        root=make_unique<SMJoin>(move(left),move(right),pInfo);
+        if(dis(gen)) root=make_unique<Join>(move(left), move(right), pInfo);
+        else root=make_unique<SMJoin>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Right:
         left=addScan(usedRelations,leftInfo,query);
         right=move(root);
-        root=make_unique<SMJoin>(move(left),move(right),pInfo);
+        if(dis(gen)) root=make_unique<Join>(move(left), move(right), pInfo);
+        else root=make_unique<SMJoin>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Both:
         // All relations of this join are already used somewhere else in the query.
