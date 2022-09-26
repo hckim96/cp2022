@@ -2,7 +2,6 @@
 #include <sys/time.h>
 #include <mutex>
 #include <iostream>
-#include <debug.hpp>
 
 extern std::mutex cerrMutex;
 class Timer {

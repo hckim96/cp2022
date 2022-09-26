@@ -30,7 +30,7 @@ class Relation {
   /// Constructor using mmap
   Relation(const char* fileName);
   /// Delete copy constructor
-  // Relation(const Relation& other)=delete;
+  Relation(const Relation& other)=default;
   /// Move constructor
   // Relation(Relation&& other)=default;
   /// The destructor

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cassert>
 #include <memory>
 #include <stdexcept>
@@ -11,6 +10,8 @@
 #include "Parser.hpp"
 #include "../BS_thread_pool.hpp"
 #include <map>
+#include "debug.hpp"
+#include "timer.hpp"
 
 //---------------------------------------------------------------------------
 namespace std {

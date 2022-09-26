@@ -2,7 +2,6 @@
 #include <cassert>
 #include <iostream>
 #include <map>
-#include "timer.hpp"
 //---------------------------------------------------------------------------
 using namespace std;
 //---------------------------------------------------------------------------
@@ -101,7 +100,12 @@ void FilterScan::run()
         if (f.constant <= colRange.first) emptyResult = true;
         break;
     };
-    if (emptyResult) return;
+    if (emptyResult) {
+      #if defined(MY_DEBUG)
+      FSScanTime += fs.get();
+      #endif // MY_DEBUG
+      return;
+    }
   }
   // check filter intersection is empty
   auto applyFilterToRange = [](pair<uint64_t, uint64_t>& p1, FilterInfo& filter) {
@@ -127,13 +131,24 @@ void FilterScan::run()
   for (int i = 0; i < filters.size(); ++i) {
     pair<uint64_t, uint64_t> intersection = {0, UINT64_MAX};
     intersection = applyFilterToRange(intersection, filters[i]);
-    if (intersection.first > intersection.second) return;
+    if (intersection.first > intersection.second) {
+      #if defined(MY_DEBUG)
+      FSScanTime += fs.get();
+      #endif // MY_DEBUG
+      
+      return;
+    }
     for (int j = 0; j < filters.size(); ++j) {
       if (i == j) continue;
       if (filters[i].filterColumn == filters[j].filterColumn) {
         // rel, col same
         intersection = applyFilterToRange(intersection, filters[j]);
-        if (intersection.first > intersection.second) return;
+        if (intersection.first > intersection.second) {
+          #if defined(MY_DEBUG)
+          FSScanTime += fs.get();
+          #endif // MY_DEBUG
+          return;
+        }
       }
     }
   }
@@ -147,6 +162,7 @@ void FilterScan::run()
       copy2Result(i);
   }
   #ifdef MY_DEBUG
+  FSScanTime += fs.get();
   fs.cerrget("\t\tfsscan->run(): ");
   #endif
 }
@@ -188,9 +204,6 @@ bool Join::require(SelectInfo info)
   return true;
 }
 //---------------------------------------------------------------------------
-// vector<uint64_t> Join::getSums() {
-//   return tmpSums;
-// }
 void Join::copy2Result(uint64_t leftId,uint64_t rightId)
   // Copy to result
 {
@@ -214,13 +227,13 @@ void Join::copy2Result(uint64_t leftId,uint64_t rightId)
 void Join::run()
   // Run
 {
-  #ifdef MY_DEBUG
-  Timer jj;
-  #endif
   left->require(pInfo.left);
   right->require(pInfo.right);
   left->run();
   right->run();
+  #ifdef MY_DEBUG
+  Timer jj;
+  #endif
 
 
   // Use smaller input for build
@@ -291,9 +304,6 @@ bool SMJoin::require(SelectInfo info)
   return true;
 }
 //---------------------------------------------------------------------------
-// vector<uint64_t> SMJoin::getSums() {
-//   return tmpSums;
-// }
 void SMJoin::copy2Result(uint64_t leftId,uint64_t rightId)
   // Copy to result
 {
@@ -316,13 +326,13 @@ void SMJoin::copy2Result(uint64_t leftId,uint64_t rightId)
 void SMJoin::run()
   // Run
 {
-  #ifdef MY_DEBUG
-  Timer jj;
-  #endif
   left->require(pInfo.left);
   right->require(pInfo.right);
   left->run();
   right->run();
+  #ifdef MY_DEBUG
+  Timer jj;
+  #endif
 
 
   // Use smaller input for build
@@ -346,26 +356,37 @@ void SMJoin::run()
     select2ResultColId[info]=resColId++;
   }
 
+  if (left->resultSize == 0 || right -> resultSize == 0) return;
   auto leftColId=left->resolve(pInfo.left);
   auto rightColId=right->resolve(pInfo.right);
 
   // sort left
   auto leftKeyColumn=leftInputData[leftColId];
-  vector<pair<uint64_t, uint64_t> > leftIdx;
-  for (uint64_t i = 0; i < left->resultSize; ++i) {
-    leftIdx.emplace_back(leftKeyColumn[i], i);
+  vector<pair<uint64_t, uint64_t> > leftIdx(left->resultSize);
+  auto rightKeyColumn=rightInputData[rightColId];
+  vector<pair<uint64_t, uint64_t> > rightIdx(right->resultSize);
+
+  for (uint64_t i = 0; i < max(left->resultSize, right->resultSize); ++i) {
+    if (i < left->resultSize) leftIdx[i] = {leftKeyColumn[i], i};
+    if (i < right->resultSize) rightIdx[i] = {rightKeyColumn[i], i};
   }
-  sort(leftIdx.begin(), leftIdx.end());
 
   // sort right
-  auto rightKeyColumn=rightInputData[rightColId];
-  vector<pair<uint64_t, uint64_t> > rightIdx;
-  for (uint64_t i = 0; i < right->resultSize; ++i) {
-    rightIdx.emplace_back(rightKeyColumn[i], i);
-  }
+  sort(leftIdx.begin(), leftIdx.end());
   sort(rightIdx.begin(), rightIdx.end());
 
+
+  // pair<uint64_t, uint64_t> lRange = {leftIdx.front().first, leftIdx.back().first};
+  // pair<uint64_t, uint64_t> rRange = {rightIdx.front().first, rightIdx.back().first};
+
+  // auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+  //     return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+  // };
+  // auto range = getIntersection(lRange, rRange);
+  // if (range.first > range.second) return;
   uint64_t l = 0, r = 0, ls = 0, rs = 0;
+  // while (leftIdx[l].first != range.first) ++l;
+  // while (rightIdx[r].first != range.first) ++r;
   while (l < left->resultSize && r < right -> resultSize) {
     while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first < rightIdx[r].first) ++l;
     while (l < left->resultSize && r < right -> resultSize && leftIdx[l].first > rightIdx[r].first) ++r;
@@ -381,7 +402,8 @@ void SMJoin::run()
   }
 
   #ifdef MY_DEBUG
-  jj.cerrget("\t\tjoin->run(): ");
+  SMJoinTime += jj.get();
+  jj.cerrget("\t\tsmjoin->run(): ");
   #endif
 }
 //---------------------------------------------------------------------------
@@ -420,6 +442,9 @@ void SelfJoin::run()
   input->require(pInfo.right);
   input->run();
   inputData=input->getResults();
+  #ifdef MY_DEBUG
+  Timer t;
+  #endif
 
   for (auto& iu : requiredIUs) {
     auto id=input->resolve(iu);
@@ -436,6 +461,10 @@ void SelfJoin::run()
     if (leftCol[i]==rightCol[i])
       copy2Result(i);
   }
+  #ifdef MY_DEBUG
+  SelfJoinTime += t.get();
+  t.cerrget("\t\tselfjoin->run(): ");
+  #endif
 }
 //---------------------------------------------------------------------------
 void Checksum::run()

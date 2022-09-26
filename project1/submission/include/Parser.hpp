@@ -5,7 +5,6 @@
 #include <vector>
 #include <set>
 #include <map>
-
 #include "Relation.hpp"
 //---------------------------------------------------------------------------
 struct SelectInfo {
