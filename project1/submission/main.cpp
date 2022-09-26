@@ -18,7 +18,7 @@ vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
 vector<uint64_t> relationSizeCache;
 
 // rel col key = cnt
-// vector<vector<unordered_map<uint64_t, uint64_t> > > histogram;   
+// vector<vector<unordered_map<uint64_t, uint64_t> > > histogram;    
 
 void cacheRelationRange(Joiner joiner) {
    rangeCache.resize(joiner.relations.size());
