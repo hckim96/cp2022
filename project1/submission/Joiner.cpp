@@ -76,10 +76,8 @@ string Joiner::join(QueryInfo& query)
   // std::mt19937 gen(rd());
   // std::uniform_int_distribution<int> dis(0, 1);
   // unique_ptr<Operator> root;
-  // if (dis(gen)) root=make_unique<Join>(move(left), move(right), firstJoin);
-  // else root=make_unique<SMJoin>(move(left),move(right),firstJoin);
 
-  unique_ptr<Operator> root=make_unique<SMJoin>(move(left), move(right), firstJoin);
+  unique_ptr<Operator> root=make_unique<Join>(move(left), move(right), firstJoin);
 
 
 
@@ -91,16 +89,12 @@ string Joiner::join(QueryInfo& query)
       case QueryGraphProvides::Left:
         left=move(root);
         right=addScan(usedRelations,rightInfo,query);
-        // if(dis(gen)) root=make_unique<Join>(move(left), move(right), pInfo);
-        // else root=make_unique<SMJoin>(move(left),move(right),pInfo);
-        root=make_unique<SMJoin>(move(left),move(right),pInfo);
+        root=make_unique<Join>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Right:
         left=addScan(usedRelations,leftInfo,query);
         right=move(root);
-        // if(dis(gen)) root=make_unique<Join>(move(left), move(right), pInfo);
-        // else root=make_unique<SMJoin>(move(left),move(right),pInfo);
-        root=make_unique<SMJoin>(move(left),move(right),pInfo);
+        root=make_unique<Join>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Both:
         // All relations of this join are already used somewhere else in the query.
