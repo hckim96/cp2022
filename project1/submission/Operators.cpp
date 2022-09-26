@@ -396,7 +396,7 @@ void SMJoin::run()
         copy2Result(leftIdx[l].second, rightIdx[r].second);
         ++r;
       }
-      r = rs;
+      r = rs; 
       ++l;
       if (l < left->resultSize && leftIdx[l].first > range.second) return;
     }
