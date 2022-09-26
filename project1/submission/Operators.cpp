@@ -374,7 +374,7 @@ void SMJoin::run()
   // sort right
   sort(leftIdx.begin(), leftIdx.end());
   sort(rightIdx.begin(), rightIdx.end());
-
+ 
 
   // pair<uint64_t, uint64_t> lRange = {leftIdx.front().first, leftIdx.back().first};
   // pair<uint64_t, uint64_t> rRange = {rightIdx.front().first, rightIdx.back().first};
