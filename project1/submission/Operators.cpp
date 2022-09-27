@@ -398,7 +398,7 @@ void SMJoin::run()
       }
       r = rs; 
       ++l;
-      if (l < left->resultSize && leftIdx[l].first > range.second) return;
+      if (l < left->resultSize && leftIdx[l].first > range.second) return; 
     }
   }
 
