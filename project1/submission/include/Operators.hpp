@@ -31,6 +31,8 @@ class Operator {
   std::vector<uint64_t*> resultColumns;
   /// The tmp results
   std::vector<std::vector<uint64_t>> tmpResults;
+  /// The tmp results of threads tid, colId, rowId
+  std::vector<std::vector<std::vector<uint64_t>>> paralleltmpResults;
   /// The tmp sums
   std::vector<uint64_t> tmpSums;
 
@@ -69,7 +71,7 @@ class Scan : public Operator {
   /// Run
   void run() override;
   /// Get  materialized results
-  virtual std::vector<uint64_t*> getResults() override;
+  virtual std::vector<uint64_t* > getResults() override;
   /// Get  materialized results
   virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
@@ -227,3 +229,50 @@ class Checksum : public Operator {
   void run() override;
 };
 //---------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------
+class ParallelHashJoin : public Operator {
+  /// The input operators
+  std::unique_ptr<Operator> left, right;
+  /// The join predicate info
+  PredicateInfo& pInfo;
+  /// Copy tuple to result
+  // void copy2Result(uint64_t leftId,uint64_t rightId);
+  void copy2Result(uint64_t, uint64_t leftId,uint64_t rightId);
+  /// Create mapping for bindings
+  void createMappingForBindings();
+
+  using HT=std::unordered_multimap<uint64_t,uint64_t>;
+
+  /// The hash table for the join
+  HT hashTable;
+  /// Columns that have to be materialized
+  std::unordered_set<SelectInfo> requestedColumns;
+  /// Left/right columns that have been requested
+  std::vector<SelectInfo> requestedColumnsLeft,requestedColumnsRight;
+
+
+  /// The entire input data of left and right
+  std::vector<uint64_t*> leftInputData,rightInputData;
+  /// The input data that has to be copied
+  std::vector<uint64_t*>copyLeftData,copyRightData;
+
+  public:
+  /// tmp
+  bool isSelf=false;
+
+  /// The constructor
+  ParallelHashJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo) : left(std::move(left)), right(std::move(right)), pInfo(pInfo) {paralleltmpResults.resize(JOIN_THREAD_NUM);};
+  /// The constructor2
+  ParallelHashJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo, bool isSelf) : left(std::move(left)), right(std::move(right)), pInfo(pInfo), isSelf(isSelf) {paralleltmpResults.resize(JOIN_THREAD_NUM);};
+  /// Require a column and add it to results
+  std::vector<uint64_t*> getResults() override;
+  /// Require a column and add it to results
+  bool require(SelectInfo info) override;
+  /// Run
+  void run() override;
+
+  /// Get  materialized results
+  virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
+};

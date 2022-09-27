@@ -6,8 +6,9 @@
 using namespace std;
 
 // query in  one batch max: 30 ~ 40
-uint64_t fsNumThread = 40;
-BS::thread_pool pool(fsNumThread);
+BS::thread_pool pool(THREAD_NUM);
+BS::thread_pool joinpool(JOIN_THREAD_NUM);
+
 #ifdef MY_DEBUG
 std::mutex cerrMutex;
 #endif
@@ -58,8 +59,8 @@ int main(int argc, char* argv[]) {
    #endif // MY_DEBUG
    // Preparation phase (not timed)
    // Build histograms, indexes,...
-   vector<Joiner> joiners(fsNumThread);
-   for (int i = 0; i < fsNumThread; ++i) {
+   vector<Joiner> joiners(THREAD_NUM);
+   for (int i = 0; i < THREAD_NUM; ++i) {
       joiners[i] = joiner;
    }
    cacheRelationRange(joiner);
@@ -75,7 +76,7 @@ int main(int argc, char* argv[]) {
    #endif // MY_DEBUG
    
    vector<future<string> > results;
-   vector<string> lines(fsNumThread);
+   vector<string> lines(THREAD_NUM);
    while (getline(cin, line)) {
       #if defined(MY_DEBUG)
       Timer batch;

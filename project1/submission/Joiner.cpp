@@ -77,7 +77,7 @@ string Joiner::join(QueryInfo& query)
   // std::uniform_int_distribution<int> dis(0, 1);
   // unique_ptr<Operator> root;
 
-  unique_ptr<Operator> root=make_unique<Join>(move(left), move(right), firstJoin);
+  unique_ptr<Operator> root=make_unique<ParallelHashJoin>(move(left), move(right), firstJoin);
 
 
 
@@ -89,12 +89,12 @@ string Joiner::join(QueryInfo& query)
       case QueryGraphProvides::Left:
         left=move(root);
         right=addScan(usedRelations,rightInfo,query);
-        root=make_unique<Join>(move(left),move(right),pInfo);
+        root=make_unique<ParallelHashJoin>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Right:
         left=addScan(usedRelations,leftInfo,query);
         right=move(root);
-        root=make_unique<Join>(move(left),move(right),pInfo);
+        root=make_unique<ParallelHashJoin>(move(left),move(right),pInfo);
         break;
       case QueryGraphProvides::Both:
         // All relations of this join are already used somewhere else in the query.

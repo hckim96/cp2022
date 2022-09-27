@@ -4,6 +4,7 @@
 #include <map>
 //---------------------------------------------------------------------------
 using namespace std;
+extern BS::thread_pool joinpool;
 //---------------------------------------------------------------------------
 bool Scan::require(SelectInfo info)
   // Require a column and add it to results
@@ -503,3 +504,183 @@ void Checksum::run()
   #endif
 }
 //---------------------------------------------------------------------------
+
+vector<uint64_t* > ParallelHashJoin::getResults()
+  // Get materialized results
+{
+  vector<uint64_t* > resultVector(paralleltmpResults[0].size());
+  for (uint64_t i = 0; i < resultVector.size(); ++i) {
+    resultVector[i] = (uint64_t*)malloc(sizeof(uint64_t) * resultSize);
+  }
+    for (uint64_t cid = 0; cid < paralleltmpResults[0].size(); ++cid) {
+    uint64_t s = 0;
+  for (uint64_t tid = 0; tid < JOIN_THREAD_NUM; ++tid) {
+      for (uint64_t id = 0; id < paralleltmpResults[tid][0].size(); ++id) {
+        // resultVector[cid].push_back(paralleltmpResults[tid][cid][id]);
+        resultVector[cid][s +  id] = paralleltmpResults[tid][cid][id];
+      }
+      s += paralleltmpResults[tid][0].size();
+    }
+  }
+  return resultVector;
+}
+
+bool ParallelHashJoin::require(SelectInfo info)
+  // Require a column and add it to results
+{
+  if (requestedColumns.count(info)==0) {
+    bool success=false;
+    if(left->require(info)) {
+      requestedColumnsLeft.emplace_back(info);
+      success=true;
+    } else if (right->require(info)) {
+      success=true;
+      requestedColumnsRight.emplace_back(info);
+    }
+    if (!success)
+      return false;
+
+    tmpResults.emplace_back();
+    for (auto& e: paralleltmpResults) {
+      e.emplace_back();
+    }
+    if (isRoot) {
+      tmpSums.emplace_back(0UL);
+    }
+    requestedColumns.emplace(info);
+  }
+  return true;
+}
+//---------------------------------------------------------------------------
+void ParallelHashJoin::copy2Result(uint64_t tid, uint64_t leftId,uint64_t rightId)
+  // Copy to result
+{
+  unsigned relColId=0;
+  for (unsigned cId=0;cId<copyLeftData.size();++cId) {
+    if (isRoot) {
+      tmpSums[relColId] += copyLeftData[cId][leftId];
+    }
+    paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
+  }
+
+  for (unsigned cId=0;cId<copyRightData.size();++cId) {
+    if (isRoot) {
+      tmpSums[relColId] += copyRightData[cId][rightId];
+    }
+    paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
+  }
+  ++resultSize;
+}
+//---------------------------------------------------------------------------
+void ParallelHashJoin::run()
+  // Run
+{
+  left->require(pInfo.left);
+  right->require(pInfo.right);
+  left->run();
+  right->run();
+  #ifdef MY_DEBUG
+  Timer jj;
+  #endif
+
+
+  // Use smaller input for build
+  if (left->resultSize>right->resultSize) {
+    swap(left,right);
+    swap(pInfo.left,pInfo.right);
+    swap(requestedColumnsLeft,requestedColumnsRight);
+  }
+
+  auto leftInputData=left->getResults();
+  auto rightInputData=right->getResults();
+
+  // Resolve the input columns
+  unsigned resColId=0;
+  for (auto& info : requestedColumnsLeft) {
+    copyLeftData.push_back(leftInputData[left->resolve(info)]);
+    select2ResultColId[info]=resColId++;
+  }
+  for (auto& info : requestedColumnsRight) {
+    copyRightData.push_back(rightInputData[right->resolve(info)]);
+    select2ResultColId[info]=resColId++;
+  }
+
+  auto leftColId=left->resolve(pInfo.left);
+  auto rightColId=right->resolve(pInfo.right);
+
+  #if defined(MY_DEBUG)
+  Timer buildAndProbe;
+  #endif // MY_DEBUG
+  
+  // Build phase
+  auto leftKeyColumn=leftInputData[leftColId];
+  hashTable.reserve(left->resultSize*2);
+  for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
+    hashTable.emplace(leftKeyColumn[i],i);
+  }
+
+  #if defined(MY_DEBUG)
+  JoinHashBuildTime += buildAndProbe.get();
+  buildAndProbe.restart();
+  #endif // MY_DEBUG
+  // Probe phase
+  auto rightKeyColumn=rightInputData[rightColId];
+
+  auto getWorkloadRanges = [](uint64_t total, uint64_t threadNum) {
+    vector<pair<uint64_t, uint64_t> > ranges;
+
+
+
+  };
+  auto workSize = right->resultSize / JOIN_THREAD_NUM;
+  vector<future<void> > futures;
+  for (int tid = 0; tid < JOIN_THREAD_NUM; ++tid) {
+    auto s = workSize * tid;
+    auto e = workSize * (tid + 1);
+    if (tid == JOIN_THREAD_NUM - 1) e = right->resultSize;
+    futures.emplace_back( joinpool.submit([&copyLeftData=copyLeftData, isRoot=isRoot,&paralleltmpResults=paralleltmpResults,&tmpSums=tmpSums,&copyRightData=copyRightData,&resultSize=resultSize, &hashTable = hashTable, &rightKeyColumn, tid, s, e] {
+      for (auto i = s; i != e; ++i) {
+        auto rightKey=rightKeyColumn[i];
+        auto range=hashTable.equal_range(rightKey);
+        for (auto iter=range.first;iter!=range.second;++iter) {
+          // copy2Result(tid, iter->second,i);
+          auto leftId = iter->second;
+          auto rightId = i;
+
+          unsigned relColId=0;
+          for (unsigned cId=0;cId<copyLeftData.size();++cId) {
+            if (isRoot) {
+              // tmpSums[relColId] += copyLeftData[cId][leftId];
+              __sync_fetch_and_add(&tmpSums[relColId], copyLeftData[cId][leftId]);
+            }
+            paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
+          }
+
+          for (unsigned cId=0;cId<copyRightData.size();++cId) {
+            if (isRoot) {
+              // tmpSums[relColId] += copyRightData[cId][rightId];
+              __sync_fetch_and_add(&tmpSums[relColId], copyRightData[cId][rightId]);
+            }
+            paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
+          }
+          __sync_fetch_and_add(&resultSize, 1);
+        }
+      }
+    })
+    );
+  }
+  for (auto&& f: futures) {
+    f.wait();
+  }
+  // joinpool.wait_for_tasks();
+  // for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
+  //   auto rightKey=rightKeyColumn[i];
+  //   auto range=hashTable.equal_range(rightKey);
+  //   for (auto iter=range.first;iter!=range.second;++iter) {
+  //     copy2Result(iter->second,i);
+  //   }
+  // }
+  #if defined(MY_DEBUG)
+  JoinProbingTime += buildAndProbe.get();
+  #endif
+}
