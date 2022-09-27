@@ -376,12 +376,12 @@ void SMJoin::run()
   sort(rightIdx.begin(), rightIdx.end());
  
 
-  pair<uint64_t, uint64_t> lRange = {leftIdx.front().first, leftIdx.back().first};
-  pair<uint64_t, uint64_t> rRange = {rightIdx.front().first, rightIdx.back().first};
+  // pair<uint64_t, uint64_t> lRange = {leftIdx.front().first, leftIdx.back().first};
+  // pair<uint64_t, uint64_t> rRange = {rightIdx.front().first, rightIdx.back().first};
  
-  auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
-      return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
-  };
+  // auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
+  //     return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
+  // };
   // auto range = getIntersection(lRange, rRange);
   // if (range.first > range.second) return;
   uint64_t l = 0, r = 0, ls = 0, rs = 0;
