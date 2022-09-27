@@ -14,19 +14,15 @@ std::mutex cerrMutex;
 #endif
 
 
-// rel, colId -> range(pair)
+// rel, colId -> range(min, max)
 vector<vector<pair<uint64_t, uint64_t> > > rangeCache;
+// rel -> relation tuple num
 vector<uint64_t> relationSizeCache;
-
-// rel col key = cnt
-// vector<vector<unordered_map<uint64_t, uint64_t> > > histogram;     
 
 void cacheRelationRange(Joiner joiner) {
    rangeCache.resize(joiner.relations.size());
-   // histogram.resize(joiner.relations.size());
    for (int i = 0; i < joiner.relations.size(); ++i) {
       rangeCache[i].resize(joiner.relations[i].columns.size());
-      // histogram[i].resize(joiner.relations[i].columns.size());
    }
    // care
    for (uint64_t i = 0; i < joiner.relations.size(); ++i) {
@@ -39,7 +35,6 @@ void cacheRelationRange(Joiner joiner) {
          for (uint64_t rid = 0; rid < r.size; rid++) {
             min_ = min(min_, r.columns[j][rid]);
             max_ = max(max_, r.columns[j][rid]);
-            // histogram[i][j][r.columns[j][rid]]++;
          }
          rangeCache[i][j] = {min_, max_};
       }
@@ -98,24 +93,8 @@ int main(int argc, char* argv[]) {
       results.emplace_back(
          pool.submit([&joiners, &lines, idx] {
             QueryInfo i;
-            #ifdef MY_DEBUG
-            Timer p;
-            #endif
             i.parseQuery(lines[idx]);
-            #ifdef MY_DEBUG
-            // auto parseTime = p.get();
-            // Timer t;
-            #endif
-            
-            auto ret = joiners[idx].join(i);
-            #ifdef MY_DEBUG
-            // auto joinTime = t.get();
-            // cerrMutex.lock();
-            // cerr << "Thread " << idx << " parseTime :" <<  (double)(parseTime * 1000) << '\n';
-            // cerr << "Thread " << idx << " joinTime :" <<  (double)(joinTime * 1000) << '\n';
-            // cerrMutex.unlock();
-            #endif
-            return ret;
+            return joiners[idx].join(i);
          })
       );
       idx++;
