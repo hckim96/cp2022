@@ -1,7 +1,7 @@
 #define THREAD_NUM 40
 #define JOIN_THREAD_NUM 40
 
-#define MY_DEBUG
+// #define MY_DEBUG
 
 #ifdef MY_DEBUG
 extern double preprocessTime;
