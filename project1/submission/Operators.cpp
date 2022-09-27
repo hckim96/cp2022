@@ -702,3 +702,4 @@ void ParallelHashJoin::run()
   JoinProbingTime += buildAndProbe.get();
   #endif
 }
+ 
