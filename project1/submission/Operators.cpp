@@ -163,7 +163,6 @@ void FilterScan::run()
   }
   #ifdef MY_DEBUG
   FSScanTime += fs.get();
-  fs.cerrget("\t\tfsscan->run(): ");
   #endif
 }
 //---------------------------------------------------------------------------
@@ -260,12 +259,21 @@ void Join::run()
   auto leftColId=left->resolve(pInfo.left);
   auto rightColId=right->resolve(pInfo.right);
 
+  #if defined(MY_DEBUG)
+  Timer buildAndProbe;
+  #endif // MY_DEBUG
+  
   // Build phase
   auto leftKeyColumn=leftInputData[leftColId];
   hashTable.reserve(left->resultSize*2);
   for (uint64_t i=0,limit=i+left->resultSize;i!=limit;++i) {
     hashTable.emplace(leftKeyColumn[i],i);
   }
+
+  #if defined(MY_DEBUG)
+  JoinHashBuildTime += buildAndProbe.get();
+  buildAndProbe.restart();
+  #endif // MY_DEBUG
   // Probe phase
   auto rightKeyColumn=rightInputData[rightColId];
   for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
@@ -275,8 +283,8 @@ void Join::run()
       copy2Result(iter->second,i);
     }
   }
-  #ifdef MY_DEBUG
-  jj.cerrget("\t\tjoin->run(): ");
+  #if defined(MY_DEBUG)
+  JoinProbingTime += buildAndProbe.get();
   #endif
 }
 //---------------------------------------------------------------------------
@@ -404,7 +412,6 @@ void SMJoin::run()
 
   #ifdef MY_DEBUG
   SMJoinTime += jj.get();
-  jj.cerrget("\t\tsmjoin->run(): ");
   #endif
 }
 //---------------------------------------------------------------------------
@@ -464,7 +471,6 @@ void SelfJoin::run()
   }
   #ifdef MY_DEBUG
   SelfJoinTime += t.get();
-  t.cerrget("\t\tselfjoin->run(): ");
   #endif
 }
 //---------------------------------------------------------------------------
@@ -479,12 +485,10 @@ void Checksum::run()
   #endif
   input->run();
   #ifdef MY_DEBUG
-  tt.cerrget("\tinput->run() in checksumrun: ");
   tt.restart();
   #endif
 
   #ifdef MY_DEBUG
-  tt.cerrget("\tgetsums(): ");
   #endif
   auto sums=input->getSums();
   #ifdef MY_DEBUG
@@ -496,7 +500,6 @@ void Checksum::run()
     checkSums.push_back(sums[colId]);
   }
   #ifdef MY_DEBUG
-  tt.cerrget("\tgettingsum.. in checksumrun: ");
   #endif
 }
 //---------------------------------------------------------------------------

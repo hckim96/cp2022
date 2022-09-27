@@ -127,6 +127,8 @@ int main(int argc, char* argv[]) {
    cerrMutex.lock();
    cerr << "preprocessTime: " << preprocessTime << '\n';
    cerr << "indexBuildTime: " << indexBuildTime << '\n';
+   cerr << "JoinHashBuildTime: " << JoinHashBuildTime << '\n';
+   cerr << "JoinProbingTime: " << JoinProbingTime << '\n';
    cerr << "INLJoinTime: " << INLJoinTime << '\n';
    cerr << "SelfJoinTime: " << SelfJoinTime << '\n';
    cerr << "SMJoinTime: " << SMJoinTime << '\n';
