@@ -664,7 +664,6 @@ void ParallelHashJoin::run()
           for (unsigned cId=0;cId<copyLeftData.size();++cId) {
             if (isRoot) {
               localSums[relColId] += copyLeftData[cId][leftId];
-              // __sync_fetch_and_add(&tmpSums[relColId], copyLeftData[cId][leftId]);
             }
             paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
           }
