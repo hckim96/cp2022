@@ -514,7 +514,7 @@ vector<uint64_t* > ParallelHashJoin::getResults()
   }
     for (uint64_t cid = 0; cid < paralleltmpResults[0].size(); ++cid) {
     uint64_t s = 0;
-  for (uint64_t tid = 0; tid < JOIN_THREAD_NUM; ++tid) {
+  for (uint64_t tid = 0; tid < workerCnt; ++tid) {
       for (uint64_t id = 0; id < paralleltmpResults[tid][0].size(); ++id) {
         // resultVector[cid].push_back(paralleltmpResults[tid][cid][id]);
         resultVector[cid][s +  id] = paralleltmpResults[tid][cid][id];
@@ -632,13 +632,26 @@ void ParallelHashJoin::run()
 
 
   };
-  auto workSize = right->resultSize / JOIN_THREAD_NUM;
+
+  auto getProperWorkerCnt = [](uint64_t totalWorkSize) {
+    uint64_t workerSize = totalWorkSize / MIN_WORK_SIZE;
+    if (workerSize > JOIN_THREAD_NUM) {
+      workerSize = JOIN_THREAD_NUM;
+    }
+    if (workerSize == 0) workerSize = 1;
+    return workerSize;
+  };
+  workerCnt = getProperWorkerCnt(right->resultSize);
+  
+  auto workSize = right->resultSize / workerCnt;
   vector<future<void> > futures;
-  for (int tid = 0; tid < JOIN_THREAD_NUM; ++tid) {
+  for (int tid = 0; tid < workerCnt; ++tid) {
     auto s = workSize * tid;
     auto e = workSize * (tid + 1);
-    if (tid == JOIN_THREAD_NUM - 1) e = right->resultSize;
+    if (tid == workerCnt - 1) e = right->resultSize;
     futures.emplace_back( joinpool.submit([&copyLeftData=copyLeftData, isRoot=isRoot,&paralleltmpResults=paralleltmpResults,&tmpSums=tmpSums,&copyRightData=copyRightData,&resultSize=resultSize, &hashTable = hashTable, &rightKeyColumn, tid, s, e] {
+      vector<uint64_t> localSums(copyLeftData.size() + copyRightData.size(), 0);
+      uint64_t localResultSize = 0;
       for (auto i = s; i != e; ++i) {
         auto rightKey=rightKeyColumn[i];
         auto range=hashTable.equal_range(rightKey);
@@ -650,22 +663,27 @@ void ParallelHashJoin::run()
           unsigned relColId=0;
           for (unsigned cId=0;cId<copyLeftData.size();++cId) {
             if (isRoot) {
-              // tmpSums[relColId] += copyLeftData[cId][leftId];
-              __sync_fetch_and_add(&tmpSums[relColId], copyLeftData[cId][leftId]);
+              localSums[relColId] += copyLeftData[cId][leftId];
+              // __sync_fetch_and_add(&tmpSums[relColId], copyLeftData[cId][leftId]);
             }
             paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
           }
 
           for (unsigned cId=0;cId<copyRightData.size();++cId) {
             if (isRoot) {
-              // tmpSums[relColId] += copyRightData[cId][rightId];
-              __sync_fetch_and_add(&tmpSums[relColId], copyRightData[cId][rightId]);
+              localSums[relColId] += copyRightData[cId][rightId];
             }
             paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
           }
-          __sync_fetch_and_add(&resultSize, 1);
+          localResultSize += 1;
         }
       }
+      if (isRoot) {
+        for (int i = 0; i < localSums.size(); ++i) {
+        __sync_fetch_and_add(&tmpSums[i], localSums[i]);
+        }
+      }
+      __sync_fetch_and_add(&resultSize, localResultSize);
     })
     );
   }

@@ -1,6 +1,6 @@
 #define THREAD_NUM 40
 #define JOIN_THREAD_NUM 40
-
+#define MIN_WORK_SIZE 100
 // #define MY_DEBUG
 
 #ifdef MY_DEBUG

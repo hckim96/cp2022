@@ -258,6 +258,7 @@ class ParallelHashJoin : public Operator {
   /// The input data that has to be copied
   std::vector<uint64_t*>copyLeftData,copyRightData;
 
+  unsigned workerCnt;
   public:
   /// tmp
   bool isSelf=false;
