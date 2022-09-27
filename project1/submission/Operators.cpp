@@ -382,8 +382,8 @@ void SMJoin::run()
   auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
       return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
   };
-  auto range = getIntersection(lRange, rRange);
-  if (range.first > range.second) return;
+  // auto range = getIntersection(lRange, rRange);
+  // if (range.first > range.second) return;
   uint64_t l = 0, r = 0, ls = 0, rs = 0;
   // while (leftIdx[l].first != range.first) ++l;
   // while (rightIdx[r].first != range.first) ++r;
@@ -398,7 +398,7 @@ void SMJoin::run()
       }
       r = rs; 
       ++l;
-      if (l < left->resultSize && leftIdx[l].first > range.second) return; 
+      // if (l < left->resultSize && leftIdx[l].first > range.second) return; 
     }
   }
 
