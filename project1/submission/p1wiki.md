@@ -414,8 +414,45 @@ if any of those is true, then no need to iterate tuples. (empty result)
 
 
 5. Intra-Operator parallelism
-    - parallel hash join
-        - Divide work loop iterating right input.
+
+thread pool
+
+
+```cpp
+// in debug.hpp
+#define THREAD_NUM 40
+#define JOIN_THREAD_NUM 100
+#define FSSCAN_THREAD_NUM 100
+#define MIN_WORK_SIZE 1000
+#define FS_MIN_WORK_SIZE 10000 
+
+// in main.cpp
+BS::thread_pool pool(THREAD_NUM);
+BS::thread_pool joinpool(JOIN_THREAD_NUM);
+BS::thread_pool fsscanpool(FSSCAN_THREAD_NUM);
+
+```
+
+Thread pool configuration. 
+
+pool is thread pool for inter-query parallelism.
+
+
+joinpool is for intra-ParallelHashJoin, fsscanpool is for intra-FilterScan.
+
+
+THREAD_NUM is 40 because i found that maximum number of query in one batch can be 30~.
+
+
+min work size means that how many loop iteration each worker should do at least.
+
+
+I set the join/fsscan thread num and min work size to the one that shows the best result at the testing server. (maybe not optimal)
+
+
+
+- parallel hash join
+    - Divide work loop iterating right input.
 
 ```cpp
 void ParallelHashJoin::run()
