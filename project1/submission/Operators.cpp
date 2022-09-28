@@ -7,6 +7,11 @@ using namespace std;
 extern BS::thread_pool joinpool;
 extern BS::thread_pool fsscanpool;
 
+/*
+  get proper worker cnt.
+  that 1 <= && <= maxThreadNum
+  and each worker can work with equal or more than minWorkSize
+*/
 unsigned getProperWorkerCnt(uint64_t totalWorkSize, uint64_t minWorkSize, uint64_t maxThreadNum) {
   uint64_t workerSize = totalWorkSize / minWorkSize;
   if (workerSize > maxThreadNum) {
@@ -218,6 +223,9 @@ void FilterScan::run()
   #endif
 }
 //---------------------------------------------------------------------------
+/*
+  get tmpSums which pre calculated when probing at root operator
+*/
 vector<uint64_t> Operator::getSums() {
   return tmpSums;
 }
@@ -467,6 +475,9 @@ void SMJoin::run()
   #endif
 }
 //---------------------------------------------------------------------------
+/*
+  calculate sum if it's root.
+*/
 void SelfJoin::copy2Result(uint64_t id)
   // Copy to result
 {
@@ -555,10 +566,13 @@ void Checksum::run()
   #endif
 }
 //---------------------------------------------------------------------------
-
+/*
+  merge the parallel tmp results into one.
+*/
 vector<uint64_t* > ParallelHashJoin::getResults()
   // Get materialized results
 {
+
   vector<uint64_t* > resultVector(paralleltmpResults[0].size());
   for (uint64_t i = 0; i < resultVector.size(); ++i) {
     resultVector[i] = (uint64_t*)malloc(sizeof(uint64_t) * resultSize);
@@ -606,21 +620,6 @@ void ParallelHashJoin::copy2Result(uint64_t tid, uint64_t leftId,uint64_t rightI
   // Copy to result
 {
   // not used
-  // unsigned relColId=0;
-  // for (unsigned cId=0;cId<copyLeftData.size();++cId) {
-  //   if (isRoot) {
-  //     tmpSums[relColId] += copyLeftData[cId][leftId];
-  //   }
-  //   paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
-  // }
-
-  // for (unsigned cId=0;cId<copyRightData.size();++cId) {
-  //   if (isRoot) {
-  //     tmpSums[relColId] += copyRightData[cId][rightId];
-  //   }
-  //   paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
-  // }
-  // ++resultSize;
 }
 //---------------------------------------------------------------------------
 void ParallelHashJoin::run()
@@ -675,6 +674,9 @@ void ParallelHashJoin::run()
   buildAndProbe.restart();
   #endif // MY_DEBUG
   // Probe phase
+
+  // probing multi threading.
+  // divide full scan of right input.
   auto rightKeyColumn=rightInputData[rightColId];
   workerCnt = getProperWorkerCnt(right->resultSize, MIN_WORK_SIZE, JOIN_THREAD_NUM);
   auto workSize = right->resultSize / workerCnt;
@@ -711,6 +713,7 @@ void ParallelHashJoin::run()
         }
       }
       if (isRoot) {
+        // calculate sum while probing
         for (int i = 0; i < localSums.size(); ++i) {
         __sync_fetch_and_add(&tmpSums[i], localSums[i]);
         }
@@ -719,6 +722,8 @@ void ParallelHashJoin::run()
     })
     );
   }
+
+  // wait all threads end.
   for (auto&& f: futures) {
     f.wait();
   }

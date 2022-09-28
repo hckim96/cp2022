@@ -31,7 +31,7 @@ class Operator {
   std::vector<uint64_t*> resultColumns;
   /// The tmp results
   std::vector<std::vector<uint64_t>> tmpResults;
-  /// The tmp results of threads tid, colId, rowId
+  /// The tmp results of threads [tid][colId][rowId] -> val
   std::vector<std::vector<std::vector<uint64_t>>> paralleltmpResults;
   /// The tmp sums
   std::vector<uint64_t> tmpSums;
@@ -270,10 +270,14 @@ class ParallelHashJoin : public Operator {
   /// The constructor2
   ParallelHashJoin(std::unique_ptr<Operator>&& left,std::unique_ptr<Operator>&& right,PredicateInfo& pInfo, bool isSelf) : left(std::move(left)), right(std::move(right)), pInfo(pInfo), isSelf(isSelf) {paralleltmpResults.resize(JOIN_THREAD_NUM);};
   /// Require a column and add it to results
+  /*
+    merge the parallel tmp results into one.
+  */
   std::vector<uint64_t*> getResults() override;
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run
+
   void run() override;
 
   /// Get  materialized results
