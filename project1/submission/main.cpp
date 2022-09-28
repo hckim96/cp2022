@@ -63,7 +63,8 @@ int main(int argc, char* argv[]) {
    }
 
    // preprocess
-   // 
+   // cache all col's range : (min, max) -> used in filter optimizing
+   // cache each relation's size -> used in predicate reordering
    cacheRelationRange(joiner);
    #if defined(MY_DEBUG)
    preprocessTime += preprocess.get();
@@ -81,6 +82,7 @@ int main(int argc, char* argv[]) {
       Timer batch;
       #endif // MY_DEBUG
       if (line == "F") {
+         // wait all query in current batch is end.
          for (auto&& e: results) {
             cout << e.get();
          }
@@ -95,6 +97,7 @@ int main(int argc, char* argv[]) {
       lines[idx] = line;
       string tmp = line;
       results.emplace_back(
+         // submit task to the thread pool
          pool.submit([&joiners, &lines, idx] {
             QueryInfo i;
             i.parseQuery(lines[idx]);
