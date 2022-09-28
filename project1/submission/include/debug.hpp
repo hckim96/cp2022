@@ -15,10 +15,3 @@ extern double SelfJoinTime;
 extern double SMJoinTime;
 extern double FSScanTime;
 #endif
-
-
-
-
-
-
-
