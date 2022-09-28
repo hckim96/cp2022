@@ -1,7 +1,7 @@
 #define THREAD_NUM 40
 #define JOIN_THREAD_NUM 40
 #define FSSCAN_THREAD_NUM 40
-#define MIN_WORK_SIZE 10000
+#define MIN_WORK_SIZE 1000
 #define FS_MIN_WORK_SIZE 10000 
 // #define MY_DEBUG
 
