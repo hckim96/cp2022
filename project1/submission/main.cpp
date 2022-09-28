@@ -55,10 +55,15 @@ int main(int argc, char* argv[]) {
    #endif // MY_DEBUG
    // Preparation phase (not timed)
    // Build histograms, indexes,...
+
+   // copy joiners that each thread will use
    vector<Joiner> joiners(THREAD_NUM);
    for (int i = 0; i < THREAD_NUM; ++i) {
       joiners[i] = joiner;
    }
+
+   // preprocess
+   // 
    cacheRelationRange(joiner);
    #if defined(MY_DEBUG)
    preprocessTime += preprocess.get();
