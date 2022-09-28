@@ -368,8 +368,12 @@ void QueryInfo::parseQuery(string& rawQuery)
     then filter 0.1 > 2000 and 1.0 < 5000 can be added
    */
   addFilterWithPredicateAndColRange();
+
+  /*
+    sort predicates by order (applied filter number (ascending), relations size (descending))
+    many filter, small relation size will come first
+  */
   sortPredicates();
-  // sameBinding();
 
   /*
     merge filters at one col if possible. ex) 1.2 < 1000 & 1.2 < 10000 -> 1.2 < 1000
@@ -378,7 +382,6 @@ void QueryInfo::parseQuery(string& rawQuery)
   finalize(); // should be after resolve
   resolveRelationIds();
   // removeJoin(); not correctly implemented
-  // TODO: removeRedundantFilter();
 }
 //---------------------------------------------------------------------------
 void QueryInfo::clear()

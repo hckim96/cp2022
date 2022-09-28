@@ -62,24 +62,13 @@ string Joiner::join(QueryInfo& query)
   //cerr << query.dumpText() << endl;
   set<unsigned> usedRelations;
 
-  // We always start with the first join predicate and append the other joins to it (--> left-deep join trees)
-  // You might want to choose a smarter join ordering ...
-  // unsigned seed = std::chrono::system_clock::now()
-  //                     .time_since_epoch()
-  //                     .count();
-  // shuffle(query.predicates.begin(), query.predicates.end(), std::default_random_engine(seed));
-
   auto& firstJoin=query.predicates[0];
   auto left=addScan(usedRelations,firstJoin.left,query);
   auto right=addScan(usedRelations,firstJoin.right,query);
-  // std::random_device rd;
-  // std::mt19937 gen(rd());
-  // std::uniform_int_distribution<int> dis(0, 1);
-  // unique_ptr<Operator> root;
 
+
+  // join will be either parallel hash join or selfjoin(not changed from original except getting sum)
   unique_ptr<Operator> root=make_unique<ParallelHashJoin>(move(left), move(right), firstJoin);
-
-
 
   for (unsigned i=1;i<query.predicates.size();++i) {
     auto& pInfo=query.predicates[i];

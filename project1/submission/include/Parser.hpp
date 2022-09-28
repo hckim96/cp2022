@@ -140,8 +140,10 @@ class QueryInfo {
    */
    void addFilterWithPredicateAndColRange();
 
+
    /*
-      change order of predicates to apply filter scan first rather than scan
+      sort predicates by order (applied filter number (ascending), relations size (descending))
+      many filter, small relation size will come first
    */
    void sortPredicates();
 
