@@ -146,7 +146,16 @@ void FilterScan::run()
     }
   }
   // check filter intersection is empty
+
+  /*
+    helper function to get range of val after applied filter f to the range p1
+  */
   auto applyFilterToRange = [](pair<uint64_t, uint64_t>& p1, FilterInfo& filter) {
+
+    /*
+      get intersection of two closed range
+      if left > right, no intersection.
+    */
     auto getIntersection = [](pair<uint64_t, uint64_t>& p1, pair<uint64_t, uint64_t>& p2) {
       return make_pair(std::max(p1.first, p2.first), std::min(p1.second, p2.second));
     };
@@ -622,6 +631,12 @@ void ParallelHashJoin::copy2Result(uint64_t tid, uint64_t leftId,uint64_t rightI
   // not used
 }
 //---------------------------------------------------------------------------
+/*
+
+  same as original until building hashTable.
+  divide rows to workers to reduce iterating all rows of right column.
+
+*/
 void ParallelHashJoin::run()
   // Run
 {
