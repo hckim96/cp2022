@@ -142,7 +142,7 @@ void QueryInfo::sameSelect() {
 }
 
 ```
-first make vector of set of same cols by seeing predicates.
+first make vector of set of same cols by seeing predicates.(std::vector<std::set<SelectInfo> > same)
 
 
 ex) 1.2 = 3.0 & 3.0 = 0.1 & 1.1 = 0.2  -> {{1.2, 3.0, 0.1} {1.1, 0.2}}
