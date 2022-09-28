@@ -605,21 +605,22 @@ bool ParallelHashJoin::require(SelectInfo info)
 void ParallelHashJoin::copy2Result(uint64_t tid, uint64_t leftId,uint64_t rightId)
   // Copy to result
 {
-  unsigned relColId=0;
-  for (unsigned cId=0;cId<copyLeftData.size();++cId) {
-    if (isRoot) {
-      tmpSums[relColId] += copyLeftData[cId][leftId];
-    }
-    paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
-  }
+  // not used
+  // unsigned relColId=0;
+  // for (unsigned cId=0;cId<copyLeftData.size();++cId) {
+  //   if (isRoot) {
+  //     tmpSums[relColId] += copyLeftData[cId][leftId];
+  //   }
+  //   paralleltmpResults[tid][relColId++].push_back(copyLeftData[cId][leftId]);
+  // }
 
-  for (unsigned cId=0;cId<copyRightData.size();++cId) {
-    if (isRoot) {
-      tmpSums[relColId] += copyRightData[cId][rightId];
-    }
-    paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
-  }
-  ++resultSize;
+  // for (unsigned cId=0;cId<copyRightData.size();++cId) {
+  //   if (isRoot) {
+  //     tmpSums[relColId] += copyRightData[cId][rightId];
+  //   }
+  //   paralleltmpResults[tid][relColId++].push_back(copyRightData[cId][rightId]);
+  // }
+  // ++resultSize;
 }
 //---------------------------------------------------------------------------
 void ParallelHashJoin::run()

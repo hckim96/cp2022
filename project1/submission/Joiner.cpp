@@ -97,6 +97,9 @@ string Joiner::join(QueryInfo& query)
         break;
     };
   }
+
+  // if root, calculate sum while probing.
+  // can reduce one full scan of total result.
   root->isRoot = true;
   Checksum checkSum(move(root),query.selections);
   #ifdef MY_DEBUG
