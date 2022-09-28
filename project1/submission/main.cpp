@@ -8,6 +8,7 @@ using namespace std;
 // query in  one batch max: 30 ~ 40
 BS::thread_pool pool(THREAD_NUM);
 BS::thread_pool joinpool(JOIN_THREAD_NUM);
+BS::thread_pool fsscanpool(FSSCAN_THREAD_NUM);
 
 #ifdef MY_DEBUG
 std::mutex cerrMutex;
@@ -61,8 +62,6 @@ int main(int argc, char* argv[]) {
    cacheRelationRange(joiner);
    #if defined(MY_DEBUG)
    preprocessTime += preprocess.get();
-   preprocess.cerrget("preprocess: ");
-   // cerr << flush;
    #endif // MY_DEBUG
 
    int idx = 0;

@@ -38,6 +38,9 @@ class Operator {
 
 
   public:
+
+  unsigned workerCnt;
+
   /// is root of the tree(if true, calculate sum while probing)
   bool isRoot=false;
   /// Require a column and add it to results
@@ -88,15 +91,15 @@ class FilterScan : public Scan {
 
   public:
   /// The constructor
-  FilterScan(Relation& r,std::vector<FilterInfo> filters) : Scan(r,filters[0].filterColumn.binding), filters(filters)  {};
+  FilterScan(Relation& r,std::vector<FilterInfo> filters) : Scan(r,filters[0].filterColumn.binding), filters(filters)  {paralleltmpResults.resize(FSSCAN_THREAD_NUM);};
   /// The constructor
-  FilterScan(Relation& r,FilterInfo& filterInfo) : FilterScan(r,std::vector<FilterInfo>{filterInfo}) {};
+  FilterScan(Relation& r,FilterInfo& filterInfo) : FilterScan(r,std::vector<FilterInfo>{filterInfo}) {paralleltmpResults.resize(FSSCAN_THREAD_NUM);};
   /// Require a column and add it to results
   bool require(SelectInfo info) override;
   /// Run
   void run() override;
   /// Get  materialized results
-  virtual std::vector<uint64_t*> getResults() override { return Operator::getResults(); }
+  virtual std::vector<uint64_t*> getResults() override;
   /// Get  materialized results
   virtual std::vector<uint64_t> getSums() override {return Operator::getSums();};
 };
@@ -258,7 +261,6 @@ class ParallelHashJoin : public Operator {
   /// The input data that has to be copied
   std::vector<uint64_t*>copyLeftData,copyRightData;
 
-  unsigned workerCnt;
   public:
   /// tmp
   bool isSelf=false;

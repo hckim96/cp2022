@@ -5,6 +5,16 @@
 //---------------------------------------------------------------------------
 using namespace std;
 extern BS::thread_pool joinpool;
+extern BS::thread_pool fsscanpool;
+
+unsigned getProperWorkerCnt(uint64_t totalWorkSize, uint64_t minWorkSize, uint64_t maxThreadNum) {
+  uint64_t workerSize = totalWorkSize / minWorkSize;
+  if (workerSize > maxThreadNum) {
+    workerSize = maxThreadNum;
+  }
+  if (workerSize == 0) workerSize = 1;
+  return workerSize;
+};
 //---------------------------------------------------------------------------
 bool Scan::require(SelectInfo info)
   // Require a column and add it to results
@@ -30,6 +40,25 @@ vector<uint64_t*> Scan::getResults()
   return resultColumns;
 }
 //---------------------------------------------------------------------------
+vector<uint64_t*> FilterScan::getResults()
+  // Get materialized results
+{
+  vector<uint64_t* > resultVector(paralleltmpResults[0].size());
+  for (uint64_t i = 0; i < resultVector.size(); ++i) {
+    resultVector[i] = (uint64_t*)malloc(sizeof(uint64_t) * resultSize);
+  }
+    for (uint64_t cid = 0; cid < paralleltmpResults[0].size(); ++cid) {
+    uint64_t s = 0;
+  for (uint64_t tid = 0; tid < workerCnt; ++tid) {
+      for (uint64_t id = 0; id < paralleltmpResults[tid][0].size(); ++id) {
+        resultVector[cid][s +  id] = paralleltmpResults[tid][cid][id];
+      }
+      s += paralleltmpResults[tid][0].size();
+    }
+  }
+  return resultVector;
+}
+//---------------------------------------------------------------------------
 bool FilterScan::require(SelectInfo info)
   // Require a column and add it to results
 {
@@ -40,6 +69,9 @@ bool FilterScan::require(SelectInfo info)
     // Add to results
     inputData.push_back(relation.columns[info.colId]);
     tmpResults.emplace_back();
+    for (auto& e: paralleltmpResults) {
+      e.emplace_back();
+    }
     if (isRoot) {
       tmpSums.emplace_back(0UL);
     }
@@ -153,14 +185,33 @@ void FilterScan::run()
       }
     }
   }
+  workerCnt = getProperWorkerCnt(relation.size, FS_MIN_WORK_SIZE, FSSCAN_THREAD_NUM);
+  auto workSize = relation.size / workerCnt;
+  vector<future<void> > futures;
+  for (int tid = 0; tid < workerCnt; ++tid) {
+    auto s = workSize * tid;
+    auto e = workSize * (tid + 1);
+    if (tid == workerCnt - 1) e = relation.size;
+    futures.emplace_back(fsscanpool.submit([this, tid, s, e]{
+      uint64_t localResultSize = 0;
+      for (uint64_t i = s; i != e; ++i) {
+        bool pass=true;
+        for (auto& f : filters) {
+          pass&=applyFilter(i,f);
+        }
+        if (pass) {
+          for (unsigned cId=0;cId<inputData.size();++cId) {
+            paralleltmpResults[tid][cId].push_back(inputData[cId][i]);
+          }
+          localResultSize++;
+        }
+      }
+      __sync_fetch_and_add(&resultSize, localResultSize);
+    }));
+  }
 
-  for (uint64_t i=0;i<relation.size;++i) {
-    bool pass=true;
-    for (auto& f : filters) {
-      pass&=applyFilter(i,f);
-    }
-    if (pass)
-      copy2Result(i);
+  for (auto&& e: futures) {
+    e.wait();
   }
   #ifdef MY_DEBUG
   FSScanTime += fs.get();
@@ -516,7 +567,6 @@ vector<uint64_t* > ParallelHashJoin::getResults()
     uint64_t s = 0;
   for (uint64_t tid = 0; tid < workerCnt; ++tid) {
       for (uint64_t id = 0; id < paralleltmpResults[tid][0].size(); ++id) {
-        // resultVector[cid].push_back(paralleltmpResults[tid][cid][id]);
         resultVector[cid][s +  id] = paralleltmpResults[tid][cid][id];
       }
       s += paralleltmpResults[tid][0].size();
@@ -625,38 +675,20 @@ void ParallelHashJoin::run()
   #endif // MY_DEBUG
   // Probe phase
   auto rightKeyColumn=rightInputData[rightColId];
-
-  auto getWorkloadRanges = [](uint64_t total, uint64_t threadNum) {
-    vector<pair<uint64_t, uint64_t> > ranges;
-
-
-
-  };
-
-  auto getProperWorkerCnt = [](uint64_t totalWorkSize) {
-    uint64_t workerSize = totalWorkSize / MIN_WORK_SIZE;
-    if (workerSize > JOIN_THREAD_NUM) {
-      workerSize = JOIN_THREAD_NUM;
-    }
-    if (workerSize == 0) workerSize = 1;
-    return workerSize;
-  };
-  workerCnt = getProperWorkerCnt(right->resultSize);
-  
+  workerCnt = getProperWorkerCnt(right->resultSize, MIN_WORK_SIZE, JOIN_THREAD_NUM);
   auto workSize = right->resultSize / workerCnt;
   vector<future<void> > futures;
   for (int tid = 0; tid < workerCnt; ++tid) {
     auto s = workSize * tid;
     auto e = workSize * (tid + 1);
     if (tid == workerCnt - 1) e = right->resultSize;
-    futures.emplace_back( joinpool.submit([&copyLeftData=copyLeftData, isRoot=isRoot,&paralleltmpResults=paralleltmpResults,&tmpSums=tmpSums,&copyRightData=copyRightData,&resultSize=resultSize, &hashTable = hashTable, &rightKeyColumn, tid, s, e] {
+    futures.emplace_back( joinpool.submit([this, &rightKeyColumn, tid, s, e] {
       vector<uint64_t> localSums(copyLeftData.size() + copyRightData.size(), 0);
       uint64_t localResultSize = 0;
       for (auto i = s; i != e; ++i) {
         auto rightKey=rightKeyColumn[i];
         auto range=hashTable.equal_range(rightKey);
         for (auto iter=range.first;iter!=range.second;++iter) {
-          // copy2Result(tid, iter->second,i);
           auto leftId = iter->second;
           auto rightId = i;
 
@@ -689,14 +721,6 @@ void ParallelHashJoin::run()
   for (auto&& f: futures) {
     f.wait();
   }
-  // joinpool.wait_for_tasks();
-  // for (uint64_t i=0,limit=i+right->resultSize;i!=limit;++i) {
-  //   auto rightKey=rightKeyColumn[i];
-  //   auto range=hashTable.equal_range(rightKey);
-  //   for (auto iter=range.first;iter!=range.second;++iter) {
-  //     copy2Result(iter->second,i);
-  //   }
-  // }
   #if defined(MY_DEBUG)
   JoinProbingTime += buildAndProbe.get();
   #endif

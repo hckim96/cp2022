@@ -68,10 +68,48 @@ iterate all relations and get range of each columns and size of relation.
 
 2. Inter-query parallelism
     - In same batch, queries run asynchronously.
+
+
+main.cpp
+```cpp
+   while (getline(cin, line)) {
+      if (line == "F") {
+         for (auto&& e: results) {
+            cout << e.get();
+         }
+         results.clear();
+         idx = 0;
+         continue;
+      } // End of a batch
+      lines[idx] = line;
+      string tmp = line;
+      results.emplace_back(
+         pool.submit([&joiners, &lines, idx] {
+            QueryInfo i;
+            i.parseQuery(lines[idx]);
+            return joiners[idx].join(i);
+         })
+      );
+      idx++;
+   }
+
+```
+
+
+- Used third party library which implemented thread pool.
+- When query comes in, push task to the queue.
+- When batch end, wait for task is done.
+
 3. Query rewrite
     - add filter at selectInfo(rel, col) which has join predicate that has filter.
-    - add filter with it's range.
-    - reorder predicate. many filter, smaller relation size node will come first.
+
+parser.cpp
+```cpp
+
+```
+
+- add filter with it's range.
+- reorder predicate. many filter, smaller relation size node will come first.
 4. Filter Scan run skip
     - If col range is all filtered(empty result) skip the iteration of tuples.
 5. Intra-Operator parallelism
