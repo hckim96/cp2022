@@ -348,12 +348,33 @@ void QueryInfo::parseQuery(string& rawQuery)
   parsePredicates(queryParts[1]);
   parseSelections(queryParts[2]);
   resolveRelationIds();
+
+  /*
+    set of same cols by seeing predicates.
+    ex) 1.2 = 3.0 & 3.0 = 0.1 & 1.1 = 0.2  -> {{1.2, 3.0, 0.1} {1.1, 0.2}}
+  */  
   sameSelect(); // should be after resolve
+  
+  /*
+    by seeing same set made at sameSelect.
+    add filters of cols to the other cols in the same set
+  */
   addMoreFilterWithPredicates(); // should be before resolve
   resolveRelationIds();
+
+   /*
+    given query 0.1 = 1.0 and 0.1 < 3000 
+    where range(1.0) is [2000, 10000] and range(0.1) is [0, 5000]
+    then filter 0.1 > 2000 and 1.0 < 5000 can be added
+   */
   addFilterWithPredicateAndColRange();
   sortPredicates();
   // sameBinding();
+
+  /*
+    merge filters at one col if possible. ex) 1.2 < 1000 & 1.2 < 10000 -> 1.2 < 1000
+    remove redundant or all tuples passing filters.
+  */
   finalize(); // should be after resolve
   resolveRelationIds();
   // removeJoin(); not correctly implemented

@@ -119,10 +119,18 @@ class QueryInfo {
    /// Parse selections [RELATIONS]|[PREDICATES]|[SELECTS]
    void parseQuery(std::string& rawQuery);
 
+   /*
+      set of same cols by seeing predicates.
+      ex) 1.2 = 3.0 & 3.0 = 0.1 & 1.1 = 0.2  -> {{1.2, 3.0, 0.1} {1.1, 0.2}}
+   */  
    void sameSelect();
 
    void sameBinding();
 
+   /*
+      by seeing same set made at sameSelect.
+      add filters of cols to the other cols in the same set
+   */
    void addMoreFilterWithPredicates();
    
    /*
@@ -137,6 +145,10 @@ class QueryInfo {
    */
    void sortPredicates();
 
+   /*
+      merge filters at one col if possible. ex) 1.2 < 1000 & 1.2 < 10000 -> 1.2 < 1000
+      remove redundant or all tuples passing filters.
+   */
    void finalize();
 
    void removeJoin();
