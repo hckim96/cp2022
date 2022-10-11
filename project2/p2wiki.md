@@ -8,8 +8,8 @@
 
 # Implementation
 
-include/Timer.hpp
 ```cpp
+// include/Timer.hpp
 class Timer {
 private:
   double now() {
@@ -42,8 +42,8 @@ get() method will return elapsed time(in sec) after the Timer instance created o
 
 
 
-include/RandomIntGenerator.hpp
 ```cpp
+// include/RandomIntGenerator.hpp
 class RandomIntGenerator
 {
 private:
@@ -64,8 +64,8 @@ generate() wil return random integer value.
 
 
 
-include/WFSnapshot.hpp :: StampedSnap
 ```cpp
+// include/WFSnapshot.hpp :: StampedSnap
 template <typename T>
 class StampedSnap
 {
@@ -87,9 +87,8 @@ public:
 ```
 
 
-
-include/WFSnapshot.hpp :: WFSnapshot
 ```cpp
+// include/WFSnapshot.hpp :: WFSnapshot
 template <typename T>
 class WFSnapshot
 {
@@ -151,8 +150,8 @@ public:
 };
 ```
 
-main.cc
 ```cpp
+// main.cc
 #define UPDATE_TIME 60.0
 // ...
 
@@ -204,8 +203,8 @@ main thread start timer before creating threads and collect result, print each t
 
 # Test
 
-test/RandomIntGeneratorTest.cc
 ```cpp
+// test/RandomIntGeneratorTest.cc
 TEST(RandomIntGeneratorTest, HandlesUniformDistribution) {
 
   long long randomCnt = 10000;
@@ -228,29 +227,35 @@ TEST(RandomIntGeneratorTest, HandlesUniformDistribution) {
 ```
 test generator generates random integer value in uniform distribution.
 
-test/TimerTest.cc
 ```cpp
+// test/TimerTest.cc
 TEST(TimerTest, HandlesTimer) {
   std::vector<double> checkList = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
   // check timer can estimate time with 20% error
   for (auto time: checkList) {
     Timer timer;
+    struct timeval t;
+    
+    gettimeofday(&t, 0);
+    auto start = t.tv_sec + t.tv_usec / 1000000.0;
     while (true) {
       if (timer.get() >= time) break;
     }
-    auto timerTime = timer.get();
+    gettimeofday(&t, 0);
+    auto end = t.tv_sec + t.tv_usec / 1000000.0;
+    auto elapsed_time = end - start;
     
-    ASSERT_GE(timerTime, (time) * 0.8);
-    ASSERT_LE(timerTime, (time) * 1.2);
+    ASSERT_GE(elapsed_time, (time) * 0.8);
+    ASSERT_LE(elapsed_time, (time) * 1.2);
   }
 }
 ```
 
 test timer can estimate elapsed time with 20% error. (set error percentage 20% for safe. real error percentage is low)
 
-test/WFSnapshotTest.cc
 ```cpp
+// test/WFSnapshotTest.cc
 TEST(WFSnapshotTest, HandlesInit) {
   int thread_num = 10;
   int init = 0;
@@ -439,8 +444,6 @@ thread_31: 1736251
 
 # Anaylsis
 
-
-
 |thread_num|	total_update_count|	each_worker_update_avg|	total_diff_with_before|	each_diff_with_before|
 |:---|---:|:---:|:---:|:---:|
 |1|	81117666|	81117666		|||
@@ -453,11 +456,20 @@ thread_31: 1736251
 - total_diff_with_before column means total_update_count increase percentage than before(half thread num)
 - each_diff_with column means each_worker_update_avg increase percentage than before(half thread num)
 
-
 ![update_count](wikiImages/update_count.png)
 
-
-
-- As the 
-
-- each worker's throuput distribution seems to uniform.
+- As the thread num increase
+  - total update count increase until thread_num 4, but decrease after that.
+  - each worker's average update count decrease.
+- Time estimation (n is thread_num)
+  - update()
+    - scan()
+  - scan()
+    - (2 + t) * collect() (t is count of "moved" thread ("moved" means other thread's update is done before new collect())) (0 <= t < n - 1)
+  - collect()
+    - n * n (copying a_table (vector of n size, and each has member of vector of n size (snap)))
+  - Therefore, update()'s time is direct proportion of (2 + t) * n * n
+  - t will be greater if thread_num is bigger because as the thread_num increase, probability of other thread's update() overlap in scan() increase.
+  - So as the thread_num become twice, update()'s time becomes 4x ~ 8x, update count becomes 0.125x ~ 0.25x.
+  - However, above results shows better performance than my expectation.
+  - By seeing the above results, collect() time seems to be propotional to n. (then, 0.25x ~ 0.5x, which seems to fits the 'each_diff_with_before' column)
