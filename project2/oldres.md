@@ -1,0 +1,82 @@
+[Main](thread_num: 1) total update count ->   92886765
+[Main](thread_num: 2) total update count ->  138111092
+[Main](thread_num: 4) total update count ->  194887166
+[Main](thread_num: 8) total update count ->  246286816
+[Main](thread_num:16) total update count ->  217952056
+[Main](thread_num:32) total update count ->  155702981
+[Main](thread_num: 1) total update count ->   92931140
+[Main](thread_num: 2) total update count ->  136592693
+[Main](thread_num: 4) total update count ->  196242496
+[Main](thread_num: 8) total update count ->  245960862
+[Main](thread_num:16) total update count ->  206370761
+[Main](thread_num:32) total update count ->  155850881
+[Main](thread_num: 1) total update count ->   92963515
+[Main](thread_num: 2) total update count ->  137886862
+[Main](thread_num: 4) total update count ->  193139794
+[Main](thread_num: 8) total update count ->  246124355
+[Main](thread_num:16) total update count ->  222194002
+[Main](thread_num:32) total update count ->  155977208
+[Main](thread_num: 1) total update count ->   93028227
+[Main](thread_num: 2) total update count ->  137702409
+[Main](thread_num: 4) total update count ->  193879206
+[Main](thread_num: 8) total update count ->  245280034
+[Main](thread_num:16) total update count ->  220710204
+[Main](thread_num:32) total update count ->  155820987
+[Main](thread_num: 1) total update count ->   93007007
+[Main](thread_num: 2) total update count ->  138257659
+[Main](thread_num: 4) total update count ->  193337996
+[Main](thread_num: 8) total update count ->  245621079
+[Main](thread_num:16) total update count ->  223545368
+[Main](thread_num:32) total update count ->  155551604
+[Main](thread_num: 1) total update count ->   92952379
+[Main](thread_num: 2) total update count ->  136604522
+[Main](thread_num: 4) total update count ->  195368651
+[Main](thread_num: 8) total update count ->  243999964
+[Main](thread_num:16) total update count ->  221862957
+[Main](thread_num:32) total update count ->  155581375
+[Main](thread_num: 1) total update count ->   92938373
+[Main](thread_num: 2) total update count ->  138506453
+[Main](thread_num: 4) total update count ->  193315343
+[Main](thread_num: 8) total update count ->  245545041
+[Main](thread_num:16) total update count ->  222831569
+[Main](thread_num:32) total update count ->  155968100
+[Main](thread_num: 1) total update count ->   92980825
+[Main](thread_num: 2) total update count ->  137459334
+[Main](thread_num: 4) total update count ->  195476870
+[Main](thread_num: 8) total update count ->  245633181
+[Main](thread_num:16) total update count ->  214363299
+[Main](thread_num:32) total update count ->  155884514
+[Main](thread_num: 1) total update count ->   92971993
+[Main](thread_num: 2) total update count ->  138140371
+[Main](thread_num: 4) total update count ->  194738523
+[Main](thread_num: 8) total update count ->  246573492
+[Main](thread_num:16) total update count ->  221934174
+[Main](thread_num:32) total update count ->  155991789
+[Main](thread_num: 1) total update count ->   92972526
+[Main](thread_num: 2) total update count ->  138390452
+[Main](thread_num: 4) total update count ->  195491568
+[Main](thread_num: 8) total update count ->  246137123
+[Main](thread_num:16) total update count ->  219853935
+[Main](thread_num:32) total update count ->  155722334
+[Main](thread_num: 1) total update count ->   93025973
+[Main](thread_num: 2) total update count ->  138707179
+[Main](thread_num: 4) total update count ->  194141097
+[Main](thread_num: 8) total update count ->  244247914
+[Main](thread_num:16) total update count ->  214444104
+[Main](thread_num:32) total update count ->  155807201
+[Main](thread_num: 1) total update count ->   92980435
+[Main](thread_num: 2) total update count ->  138308917
+[Main](thread_num: 4) total update count ->  194331005
+[Main](thread_num: 8) total update count ->  245217807
+[Main](thread_num:16) total update count ->  224450521
+[Main](thread_num:32) total update count ->  155704876
+[Main](thread_num: 1) total update count ->   93030054
+[Main](thread_num: 2) total update count ->  138195815
+[Main](thread_num: 4) total update count ->  194072203
+[Main](thread_num: 8) total update count ->  245699300
+[Main](thread_num:16) total update count ->  219232161
+[Main](thread_num:32) total update count ->  155141287
+[Main](thread_num: 1) total update count ->   92626921
+[Main](thread_num: 2) total update count ->  137903218
+[Main](thread_num: 4) total update count ->  193687585
+[Main](thread_num: 8) total update count ->  243126580

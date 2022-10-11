@@ -1,0 +1,398 @@
+thread_0: 81117666
+  thread_num      total_update_count
+           1                81117666
+thread_0: 59326657
+thread_1: 59243778
+  thread_num      total_update_count
+           2               118570435
+thread_0: 39567985
+thread_1: 39556900
+thread_2: 39547028
+thread_3: 39530201
+  thread_num      total_update_count
+           4               158202114
+thread_0: 18273774
+thread_1: 18297155
+thread_2: 18347528
+thread_3: 18337982
+thread_4: 18418436
+thread_5: 18422049
+thread_6: 18499248
+thread_7: 18582564
+  thread_num      total_update_count
+           8               147178736
+thread_0: 5645589
+thread_1: 5916717
+thread_2: 5530133
+thread_3: 5472643
+thread_4: 5754378
+thread_5: 5501270
+thread_6: 5503899
+thread_7: 5544036
+thread_8: 7215285
+thread_9: 5536676
+thread_10: 5494519
+thread_11: 5531629
+thread_12: 5614967
+thread_13: 5522657
+thread_14: 5557653
+thread_15: 5643363
+  thread_num      total_update_count
+          16                90985414
+thread_0: 1535852
+thread_1: 1586398
+thread_2: 1398183
+thread_3: 1697961
+thread_4: 1376956
+thread_5: 1558858
+thread_6: 1442043
+thread_7: 1554514
+thread_8: 1471002
+thread_9: 1644034
+thread_10: 1526669
+thread_11: 1352659
+thread_12: 1571950
+thread_13: 1361725
+thread_14: 1584193
+thread_15: 1595070
+thread_16: 1547793
+thread_17: 1690994
+thread_18: 1587449
+thread_19: 1562055
+thread_20: 1416771
+thread_21: 1584344
+thread_22: 1531744
+thread_23: 1587296
+thread_24: 1569855
+thread_25: 1507275
+thread_26: 1627392
+thread_27: 1573465
+thread_28: 1474955
+thread_29: 1458913
+thread_30: 1458675
+thread_31: 1736251
+  thread_num      total_update_count
+          32                49173294
+thread_0: 84201991
+  thread_num      total_update_count
+           1                84201991
+thread_0: 62026541
+thread_1: 62017656
+  thread_num      total_update_count
+           2               124044197
+thread_0: 37587753
+thread_1: 37590294
+thread_2: 37583789
+thread_3: 37548959
+  thread_num      total_update_count
+           4               150310795
+thread_0: 17849962
+thread_1: 17885577
+thread_2: 17881244
+thread_3: 17960349
+thread_4: 17990568
+thread_5: 18037013
+thread_6: 18047828
+thread_7: 18099403
+  thread_num      total_update_count
+           8               143751944
+thread_0: 5534191
+thread_1: 5478132
+thread_2: 5453887
+thread_3: 5426182
+thread_4: 5448799
+thread_5: 7118142
+thread_6: 5596465
+thread_7: 5785503
+thread_8: 5774381
+thread_9: 5428662
+thread_10: 5402563
+thread_11: 5436064
+thread_12: 5411388
+thread_13: 5412428
+thread_14: 5546417
+thread_15: 6279154
+  thread_num      total_update_count
+          16                90532358
+thread_0: 1531961
+thread_1: 1521926
+thread_2: 1536440
+thread_3: 1405565
+thread_4: 1534940
+thread_5: 1449211
+thread_6: 1427624
+thread_7: 1655360
+thread_8: 1493564
+thread_9: 1701395
+thread_10: 1588403
+thread_11: 1811973
+thread_12: 1594099
+thread_13: 1480829
+thread_14: 1374674
+thread_15: 1381091
+thread_16: 1520574
+thread_17: 1426683
+thread_18: 1643512
+thread_19: 1478279
+thread_20: 1624634
+thread_21: 1549738
+thread_22: 1602839
+thread_23: 1689991
+thread_24: 1422610
+thread_25: 1420462
+thread_26: 1426195
+thread_27: 1444588
+thread_28: 1726349
+thread_29: 1525764
+thread_30: 1583228
+thread_31: 1674460
+  thread_num      total_update_count
+          32                49248961
+thread_0: 83900678
+  thread_num      total_update_count
+           1                83900678
+thread_0: 61877673
+thread_1: 61798413
+  thread_num      total_update_count
+           2               123676086
+thread_0: 37189644
+thread_1: 36989944
+thread_2: 37003937
+thread_3: 37032180
+  thread_num      total_update_count
+           4               148215705
+thread_0: 17910131
+thread_1: 17897783
+thread_2: 17917209
+thread_3: 17935258
+thread_4: 18006685
+thread_5: 18054914
+thread_6: 18108898
+thread_7: 18155895
+  thread_num      total_update_count
+           8               143986773
+thread_0: 5430129
+thread_1: 5440273
+thread_2: 5439052
+thread_3: 5514161
+thread_4: 5522997
+thread_5: 6004034
+thread_6: 5433301
+thread_7: 6148161
+thread_8: 5421101
+thread_9: 6519625
+thread_10: 6475581
+thread_11: 5387175
+thread_12: 5423404
+thread_13: 5411421
+thread_14: 5719964
+thread_15: 5426620
+  thread_num      total_update_count
+          16                90716999
+thread_0: 1638954
+thread_1: 1470992
+thread_2: 1420493
+thread_3: 1616572
+thread_4: 1508892
+thread_5: 1506841
+thread_6: 1546497
+thread_7: 1671545
+thread_8: 1583907
+thread_9: 1489136
+thread_10: 1350514
+thread_11: 1465553
+thread_12: 1308863
+thread_13: 1460836
+thread_14: 1503132
+thread_15: 1478950
+thread_16: 1630820
+thread_17: 1360499
+thread_18: 1558908
+thread_19: 1667831
+thread_20: 1421945
+thread_21: 1384050
+thread_22: 1517121
+thread_23: 1598831
+thread_24: 1546214
+thread_25: 1527213
+thread_26: 1752515
+thread_27: 1513966
+thread_28: 1483737
+thread_29: 1619380
+thread_30: 1481581
+thread_31: 1695925
+  thread_num      total_update_count
+          32                48782213
+thread_0: 84147541
+  thread_num      total_update_count
+           1                84147541
+thread_0: 59429411
+thread_1: 59349248
+  thread_num      total_update_count
+           2               118778659
+thread_0: 37252602
+thread_1: 37164646
+thread_2: 37181136
+thread_3: 37156963
+  thread_num      total_update_count
+           4               148755347
+thread_0: 17797743
+thread_1: 17951165
+thread_2: 17893694
+thread_3: 17863542
+thread_4: 17900350
+thread_5: 18002144
+thread_6: 18021562
+thread_7: 18079955
+  thread_num      total_update_count
+           8               143510155
+thread_0: 7205047
+thread_1: 5420751
+thread_2: 5768812
+thread_3: 5361576
+thread_4: 5418496
+thread_5: 5307164
+thread_6: 5418235
+thread_7: 5279643
+thread_8: 5317618
+thread_9: 5624030
+thread_10: 5363468
+thread_11: 5455793
+thread_12: 6103833
+thread_13: 5393009
+thread_14: 5386635
+thread_15: 5851608
+  thread_num      total_update_count
+          16                89675718
+thread_0: 1692558
+thread_1: 1383450
+thread_2: 1747363
+thread_3: 1605530
+thread_4: 1425708
+thread_5: 1523045
+thread_6: 1477077
+thread_7: 1472159
+thread_8: 1599698
+thread_9: 1630764
+thread_10: 1453832
+thread_11: 1713272
+thread_12: 1523752
+thread_13: 1524915
+thread_14: 1354736
+thread_15: 1515662
+thread_16: 1528897
+thread_17: 1360541
+thread_18: 1463465
+thread_19: 1745275
+thread_20: 1590294
+thread_21: 1565467
+thread_22: 1300690
+thread_23: 1406499
+thread_24: 1416302
+thread_25: 1560315
+thread_26: 1638084
+thread_27: 1812390
+thread_28: 1337796
+thread_29: 1697681
+thread_30: 1531933
+thread_31: 1453697
+  thread_num      total_update_count
+          32                49052847
+thread_0: 81481981
+  thread_num      total_update_count
+           1                81481981
+thread_0: 61887483
+thread_1: 61815766
+  thread_num      total_update_count
+           2               123703249
+thread_0: 39910697
+thread_1: 39833367
+thread_2: 39879268
+thread_3: 39971332
+  thread_num      total_update_count
+           4               159594664
+thread_0: 17803250
+thread_1: 17880996
+thread_2: 17931442
+thread_3: 17914284
+thread_4: 17970929
+thread_5: 18024543
+thread_6: 18050362
+thread_7: 18112188
+  thread_num      total_update_count
+           8               143687994
+thread_0: 5520480
+thread_1: 5532069
+thread_2: 5506174
+thread_3: 5518356
+thread_4: 5486483
+thread_5: 5477756
+thread_6: 6101430
+thread_7: 6546538
+thread_8: 5458864
+thread_9: 5610851
+thread_10: 5483540
+thread_11: 5471305
+thread_12: 6103998
+thread_13: 5530356
+thread_14: 5454084
+thread_15: 5496170
+  thread_num      total_update_count
+          16                90298454
+thread_0: 1300979
+thread_1: 1434968
+thread_2: 1520362
+thread_3: 1601703
+thread_4: 1627273
+thread_5: 1794999
+thread_6: 1773695
+thread_7: 1547598
+thread_8: 1303589
+thread_9: 1601028
+thread_10: 1727520
+thread_11: 1503495
+thread_12: 1609065
+thread_13: 1429002
+thread_14: 1497764
+thread_15: 1499648
+thread_16: 1476102
+thread_17: 1430270
+thread_18: 1514967
+thread_19: 1633953
+thread_20: 1645247
+thread_21: 1521815
+thread_22: 1640901
+thread_23: 1566608
+thread_24: 1529416
+thread_25: 1523871
+thread_26: 1563655
+thread_27: 1538055
+thread_28: 1382652
+thread_29: 1414267
+thread_30: 1430832
+thread_31: 1372056
+  thread_num      total_update_count
+          32                48957355
+thread_0: 84102946
+  thread_num      total_update_count
+           1                84102946
+thread_0: 59233048
+thread_1: 59150837
+  thread_num      total_update_count
+           2               118383885
+thread_0: 37624577
+thread_1: 37573322
+thread_2: 37536977
+thread_3: 37539663
+  thread_num      total_update_count
+           4               150274539
+thread_0: 18233625
+thread_1: 18341308
+thread_2: 18404069
+thread_3: 18349218
+thread_4: 18404385
+thread_5: 18427119
+thread_6: 18536125
+thread_7: 18539613
+  thread_num      total_update_count
+           8               147235462
