@@ -3,3 +3,20 @@ build/
 .DS_Store
 workloads/
 submission.tar.gz
+
+# project2
+project2/lib
+project2/bin
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+DartConfiguration.tcl
+project2/test/wfsnapshot_test\[1\]_include.cmake
+project2/test/wfsnapshot_test\[1\]_tests.cmake
+
