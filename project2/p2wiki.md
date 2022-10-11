@@ -1,5 +1,15 @@
 # Project 2: Wait-free Snapshot
 
+# How to build and Run
+
+```Text
+cd project2
+cmake .
+make
+./run 1
+```
+
+# Task overview
 - task is to implement wait-free snapshot
 - snapshot interface supports
     1. update: each thread update each register value
