@@ -159,6 +159,13 @@ public:
   };
 };
 ```
+1. collect(): return copy of a_table
+2. scan()
+    - if new collect() is clean(no difference with old) return that clean collect's value.
+    - else: use second moved thread's snap 
+      - wait-free: because thread num is n, after at most n + 1 collect() (including first oldCopy collect()) one thread must moved twice(pigeonhole principle) so collect() will be executed at most n + 1 times(finite number of steps)
+      - correctness(twice moved thread's snap is inside interval of scan()): if detected move of a thread, that thread's update() will be within interval oldCollect() ~ newCollect() (within scan(), still the thread's scan() can be outside of scan()). And if second move of the same thread's is detected, then the thread's scan() and update() will be within scan()(because first update() finished in scan() and second update() will be after that.). So it's snap will be the snapshot within the interval of scan(). This is why it's correct to use second moved thread's snap. 
+3. update(): do scan() before updating for wait-free scan() (cooperation)
 
 ```cpp
 // main.cc
@@ -475,7 +482,7 @@ thread_31: 1736251
   - update()
     - scan()
   - scan()
-    - (2 + t) * collect() (t is count of "moved" thread ("moved" means other thread's update is done before new collect())) (0 <= t < n - 1)
+    - (2 + t) * collect() (t is count of "moved" thread ("moved" means other thread's update is done before new collect())) (0 <= t <= n - 1)
   - collect()
     - n * n (copying a_table (vector of n size, and each has member of vector of n size (snap)))
   - Therefore, update()'s time is direct proportion of (2 + t) * n * n
@@ -483,3 +490,5 @@ thread_31: 1736251
   - So as the thread_num become twice, update()'s time becomes 4x ~ 8x, update count becomes 0.125x ~ 0.25x.
   - However, above results shows better performance than my expectation.
   - By seeing the above results, collect() time seems to be propotional to n. (then, 0.25x ~ 0.5x, which seems to fits the 'each_diff_with_before' column)
+
+- Summary: Causes of performance degradation are increase of runtime of collect() (because of increase of array size of a_table and snap) and increase of number of call of collect() inside scan() (because of increase of probability of other thread's update() intervene within interval of scan()).
