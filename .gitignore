@@ -1,3 +1,8 @@
+# exclude binaries.. without extensions should be first section.
+*
+!/**/
+!*.*
+
 build/
 .vscode/
 .DS_Store
