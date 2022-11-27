@@ -27,6 +27,7 @@
 #include "sorted_small_set.h"
 #include "macros.h"
 #include "index_logger.h"
+#include "timer.h"
 
 #ifndef NDEBUG
 /*
@@ -38,6 +39,7 @@
 #define BWTREE_DEBUG
 #endif
 
+#define MY_OPT
 /*
  * USE_OLD_EPOCH - This flag switches between old epoch and new epoch mechanism
  */
@@ -248,6 +250,8 @@ class BwTreeBase {
   uint64_t epoch;
 
  protected:
+ public:
+
   /** @param inner_delta_chain_length_threshold depth threshold for inner node chain to be assigned to this tree */
   NO_ASAN void SetInnerDeltaChainLengthThreshold(int inner_delta_chain_length_threshold) {
     inner_delta_chain_length_threshold_ = inner_delta_chain_length_threshold;
@@ -293,7 +297,6 @@ class BwTreeBase {
   /** lower size threshold for leaf node removal */
   int leaf_node_size_lower_threshold_ = LEAF_NODE_SIZE_LOWER_THRESHOLD;
 
- public:
   /*
    * DestroyThreadLocal() - Destroys thread local
    *
@@ -868,6 +871,11 @@ class BwTree : public BwTreeBase {
     int current_level;
 
 #endif
+    uint64_t af_cnt;
+    uint64_t af_memory;
+    double af_time;
+    util::Timer<std::milli> aTimer;
+    util::Timer<std::milli> fTimer;
 
     // Whether to abort current traversal, and start a new one
     // after seeing this flag, all function should return without
@@ -882,6 +890,9 @@ class BwTree : public BwTreeBase {
      */
     NO_ASAN inline Context(const KeyType &p_search_key)
         : search_key{p_search_key},
+          af_cnt{0},
+          af_memory{0},
+          af_time{0},
 #ifdef BWTREE_DEBUG
 
           abort_counter{0},
@@ -2283,6 +2294,12 @@ class BwTree : public BwTreeBase {
         delete_abort_count{0},
         update_op_count{0},
         update_abort_count{0},
+  
+        af_time_total{0},
+        af_cnt_total{0},
+        af_memory_total{0},
+        mftimeMutxTime{0},
+
         index_size{0},
 
         // Epoch Manager that does garbage collection
@@ -6565,7 +6582,6 @@ class BwTree : public BwTreeBase {
    */
   NO_ASAN bool Insert(const KeyType &key, const ValueType &value, bool unique_key = false) {
     INDEX_LOG_TRACE("Insert called");
-
 #ifdef BWTREE_DEBUG
     insert_op_count.fetch_add(1);
 #endif
@@ -6595,9 +6611,16 @@ class BwTree : public BwTreeBase {
       const BaseNode *node_p = snapshot_p->node_p;
       NodeID node_id = snapshot_p->node_id;
 
+      #if defined(MY_OPT)
+      if (GetNode(node_id) != node_p) goto skip;
+      #endif // MY_OPT
+      {
+      context.aTimer.Start();
+
       const LeafInsertNode *insert_node_p =
           LeafInlineAllocateOfType(LeafInsertNode, node_p, key, value, node_p, index_pair);
 
+      context.aTimer.Stop();
       bool ret = InstallNodeToReplace(node_id, insert_node_p, node_p);
       if (ret) {
         INDEX_LOG_TRACE("Leaf Insert delta CAS succeed");
@@ -6615,7 +6638,28 @@ class BwTree : public BwTreeBase {
 
 #endif
 
+      context.fTimer.Start();
       insert_node_p->~LeafInsertNode();
+      context.fTimer.Stop();
+      context.af_time = context.aTimer.GetElapsed() + context.fTimer.GetElapsed();
+      context.af_cnt++;
+      context.af_memory += sizeof(LeafInsertNode);
+      
+      }
+      mftimeMutx.lock();
+      af_time_total += context.af_time;
+      mftimeMutx.unlock();
+
+      af_cnt_total.fetch_add(context.af_cnt);
+      af_memory_total.fetch_add(context.af_memory);
+
+
+
+      #if defined(MY_OPT)
+      skip:
+      (void)0;
+      #endif // MY_OPT
+      
 
 #ifdef BWTREE_DEBUG
 
@@ -6938,6 +6982,13 @@ class BwTree : public BwTreeBase {
 
   std::atomic<uint64_t> update_op_count;
   std::atomic<uint64_t> update_abort_count;
+
+  double af_time_total;
+  std::atomic<uint64_t> af_cnt_total;
+  std::atomic<uint64_t> af_memory_total;
+
+  double mftimeMutxTime;
+  std::mutex mftimeMutx;
 
   std::atomic<uint64_t> index_size;
 

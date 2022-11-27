@@ -132,3 +132,61 @@ TEST_F(BwtreeTest, ConcurrentMixed) {
 
   delete tree;
 }
+
+
+// custom insert validation
+// each thread insert random {key, key} 100 times range [0, keynum) and check inserted key.
+// after all thread finish, for all range of key, check insert is done correctly.
+TEST_F(BwtreeTest, CustomConcurrentRandomInsert) {
+  // This defines the key space (0 ~ (1M - 1))
+  const uint32_t key_num = 1024 * 1024;
+  std::atomic<size_t> insert_success_counter = 0;
+
+  std::set<int> inserted_keys;
+  // protect above set
+  std::mutex setMutex;
+
+  common::WorkerPool thread_pool(num_threads_, {});
+  thread_pool.Startup();
+  auto *const tree = test::BwTreeTestUtil::GetEmptyTree();
+
+  // Inserts in a 1M key space randomly until all keys has been inserted
+  auto workload = [&](uint32_t id) {
+    const uint32_t gcid = id + 1;
+    tree->AssignGCID(gcid);
+    std::default_random_engine thread_generator(id);
+    std::uniform_int_distribution<int> uniform_dist(0, key_num - 1);
+
+    int cnt = 100;
+    while (cnt--) {
+      int key = uniform_dist(thread_generator);
+
+      if (tree->Insert(key, key)) {
+        insert_success_counter.fetch_add(1);
+        setMutex.lock();
+        inserted_keys.insert(key);
+        setMutex.unlock();
+      }
+    }
+    tree->UnregisterThread(gcid);
+  };
+
+  tree->UpdateThreadLocal(num_threads_ + 1);
+  test::MultiThreadTestUtil::RunThreadsUntilFinish(&thread_pool, num_threads_, workload);
+  tree->UpdateThreadLocal(1);
+
+  EXPECT_EQ(inserted_keys.size(), insert_success_counter.load());
+
+  // Verifies whether random insert is correct
+  for (uint32_t i = 0; i < key_num; i++) {
+    auto s = tree->GetValue(i);
+    if (inserted_keys.count(i)) {
+      EXPECT_EQ(s.size(), 1);
+      EXPECT_EQ(*s.begin(), i);
+    } else {
+      // not inserted key
+      EXPECT_EQ(s.size(), 0);
+    }
+  }
+  delete tree;
+}
